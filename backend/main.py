@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from groq import Groq
+import os
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = FastAPI(title="LegacyMind AI API")
 
@@ -16,16 +23,28 @@ class SymptomInput(BaseModel):
     symptoms: str
     machine_type: str = "General"
 
-@app.get("/")
-def read_root():
-    return {"status": "ok", "message": "LegacyMind AI Backend is running!"}
-
 @app.post("/analyze")
 def analyze_symptoms(data: SymptomInput):
+    prompt = f"""
+    Anda adalah LegacyMind AI, asisten pemeliharaan mesin industri.
+    Analisis gejala pada mesin {data.machine_type}: "{data.symptoms}"
     
-    return {
-        "status_case": "Mock Case Found",
-        "possible_root_cause": f"Analisis awal untuk gejala: {data.symptoms}",
-        "confidence": 75,
-        "recommendations": ["Periksa sensor suhu", "Cek pelumas komponen"]
-    }
+    Keluarkan HANYA hasil dalam format JSON persis seperti ini:
+    {{
+        "status_case": "Reasoning AI Activated",
+        "possible_root_cause": "Penjelasan singkat",
+        "confidence": 85,
+        "recommendations": ["Saran 1", "Saran 2"]
+    }}
+    """
+    
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama3-8b-8192",
+            temperature=0.2,
+            response_format={"type": "json_object"}
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        return {"error": str(e)}
