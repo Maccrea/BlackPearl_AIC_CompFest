@@ -9,6 +9,10 @@ import UploadData from "../pages/admin/Upload";
 import MachineManagement from "../pages/admin/Machine";
 import UserManagement from "../pages/admin/User";
 import Settings from "../pages/admin/Settings";
+import UploadInterview from "../pages/admin/UploadInterview"
+import KnowledgeDetail from "../pages/admin/KnowledgeDetail"
+
+
 
 import OperatorDashboard from "../pages/operator/Dashboard";
 import ProductionLine from "../components/cards/ProductionLine";
@@ -46,36 +50,44 @@ export const router = createBrowserRouter([
         path: "settings",
         element: <Settings />,
       },
+      {
+        path: "knowledge-ai/upload",
+        element: <UploadInterview />,
+      },
+      {
+        path: "knowledge-ai/:id",
+        element: <KnowledgeDetail />,
+      },
     ],
   },
   {
-  path: "/operator",
-  element: <OperatorLayout />,
-  children: [
-    {
-      index: true,
-      element: <OperatorDashboard />,
-    },
-    {
-      path: "production-line",
-      element: <ProductionLine />,
-    },
-    {
-      path: "machine-status",
-      element: <MachineStatus />,
-    },
-    {
-      path: "ai-analysis",
-      element: <AIAnalysis />,
-    },
-    {
-      path: "recommendation",
-      element: <Recommendation />,
-    },
-    {
-      path: "validation",
-      element: <Validation />,
-    },
-  ],
-}
+    path: "/operator",
+    element: <OperatorLayout />,
+    children: [
+      {
+        index: true,
+        element: <OperatorDashboard />,
+      },
+      {
+        path: "production-line",
+        element: <ProductionLine />,
+      },
+      {
+        path: "machine-status",
+        element: <MachineStatus />,
+      },
+      {
+        path: "ai-analysis",
+        element: <AIAnalysis />,
+      },
+      {
+        path: "recommendation",
+        element: <Recommendation />,
+      },
+      {
+        path: "validation",
+        element: <Validation />,
+      },
+    ],
+  }
 ]);
