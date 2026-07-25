@@ -93,7 +93,6 @@ export default function ProductionLine() {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
         <div>
@@ -106,7 +105,6 @@ export default function ProductionLine() {
           </p>
         </div>
 
-        {/* Filter */}
         <div className="relative w-full sm:w-[280px]">
 
           <select
@@ -137,7 +135,6 @@ export default function ProductionLine() {
 
       </div>
 
-      {/* Monitoring Status */}
       <div className="flex w-fit items-center gap-2 rounded-full bg-[#10B981]/10 px-3 py-1.5 text-xs font-semibold text-[#10B981]">
 
         <span className="h-2 w-2 animate-pulse rounded-full bg-[#10B981]" />
@@ -147,7 +144,6 @@ export default function ProductionLine() {
       </div>
 
 
-      {/* Production Lines */}
       <div className="space-y-6">
 
         {visibleLines.map((line) => {
@@ -170,7 +166,6 @@ export default function ProductionLine() {
               className="overflow-hidden rounded-2xl border border-[#1F2937] bg-[#121620]"
             >
 
-              {/* Line Header */}
               <div className="border-b border-[#1F2937] p-5 sm:p-6">
 
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -200,8 +195,6 @@ export default function ProductionLine() {
 
                   </div>
 
-
-                  {/* Status Summary */}
                   <div className="flex flex-wrap gap-2">
 
                     <StatusBadge
@@ -230,9 +223,6 @@ export default function ProductionLine() {
                 </div>
 
               </div>
-
-
-              {/* Machine Flow */}
               <div className="p-5 sm:p-6">
 
                 {lineMachines.length === 0 ? (
@@ -272,8 +262,6 @@ export default function ProductionLine() {
                             <React.Fragment
                               key={machine.id}
                             >
-
-                              {/* Machine Card */}
                               <div
                                 className={`w-[210px] shrink-0 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/5 ${config.border} ${config.softBg}`}
                               >
@@ -301,8 +289,6 @@ export default function ProductionLine() {
                                   {machine.type || "Machine"}
                                 </div>
 
-
-                                {/* Status */}
                                 <div
                                   className={`mt-3 inline-flex items-center gap-1.5 text-xs font-semibold ${config.color}`}
                                 >
@@ -315,8 +301,6 @@ export default function ProductionLine() {
 
                                 </div>
 
-
-                                {/* Health */}
                                 {machine.health !== undefined && (
 
                                   <div className="mt-4">
@@ -354,7 +338,6 @@ export default function ProductionLine() {
                               </div>
 
 
-                              {/* Arrow */}
                               {index <
                                 lineMachines.length - 1 && (
 
@@ -376,8 +359,6 @@ export default function ProductionLine() {
 
                 )}
 
-
-                {/* View All Machines */}
                 <div className="mt-5 flex justify-end border-t border-[#1F2937] pt-5">
 
                   <button
@@ -406,7 +387,6 @@ export default function ProductionLine() {
       </div>
 
 
-      {/* Overall Status */}
       <div>
 
         <div className="mb-4">

@@ -42,7 +42,6 @@ export default function MachineStatus() {
     },
   };
 
-  // Filter machine berdasarkan status + search
   const filteredMachines = useMemo(() => {
     return machines.filter((machine) => {
       const matchesStatus =
@@ -60,7 +59,6 @@ export default function MachineStatus() {
     });
   }, [machines, statusFilter, searchQuery]);
 
-  // Hitung jumlah berdasarkan status
   const statusCount = {
     all: machines.length,
     healthy: machines.filter(
@@ -76,8 +74,6 @@ export default function MachineStatus() {
 
   return (
     <div className="space-y-6">
-
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">
           Machine Status
@@ -87,8 +83,6 @@ export default function MachineStatus() {
           Monitoring kondisi dan parameter operasional seluruh mesin.
         </p>
       </div>
-
-      {/* Filter Section */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5">
 
         <div className="mb-4 flex items-center gap-2">
@@ -104,7 +98,6 @@ export default function MachineStatus() {
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-          {/* Status Filter */}
           <div className="flex flex-wrap gap-2">
 
             <FilterButton
@@ -140,7 +133,6 @@ export default function MachineStatus() {
 
           </div>
 
-          {/* Search */}
           <div className="relative w-full lg:w-72">
 
             <Search
@@ -161,7 +153,6 @@ export default function MachineStatus() {
         </div>
       </div>
 
-      {/* Result Info */}
       <div className="flex items-center justify-between">
 
         <div>
@@ -192,7 +183,6 @@ export default function MachineStatus() {
 
       </div>
 
-      {/* Machine Cards */}
       {filteredMachines.length > 0 ? (
 
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -213,7 +203,6 @@ export default function MachineStatus() {
                 }`}
               >
 
-                {/* Machine Header */}
                 <div className="mb-6 flex items-start justify-between">
 
                   <div>
@@ -246,7 +235,6 @@ export default function MachineStatus() {
 
                 </div>
 
-                {/* Parameters */}
                 <div className="grid grid-cols-2 gap-3">
 
                   <Parameter
@@ -291,7 +279,6 @@ export default function MachineStatus() {
 
                 </div>
 
-                {/* Health */}
                 {machine.health !== undefined && (
 
                   <div className="mt-5">
@@ -377,11 +364,6 @@ export default function MachineStatus() {
   );
 }
 
-
-/* =========================
-   FILTER BUTTON
-========================= */
-
 function FilterButton({
   active,
   onClick,
@@ -431,11 +413,6 @@ function FilterButton({
     </button>
   );
 }
-
-
-/* =========================
-   PARAMETER CARD
-========================= */
 
 function Parameter({
   icon: Icon,

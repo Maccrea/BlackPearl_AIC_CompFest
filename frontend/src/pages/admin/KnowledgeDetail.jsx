@@ -13,8 +13,6 @@ export default function KnowledgeDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // MOCK DATA
-  // Nanti diganti hasil GET dari FastAPI
   const knowledge = {
     id,
 
@@ -69,7 +67,6 @@ Engineer: Pertama periksa cooling fan, kemudian bersihkan filter udara dan perik
   return (
     <div className="space-y-6">
 
-      {/* BACK */}
       <button
         onClick={() =>
           navigate("/knowledge-ai")
@@ -381,7 +378,7 @@ Engineer: Pertama periksa cooling fan, kemudian bersihkan filter udara dan perik
 
         <button
           onClick={() =>
-            navigate("/knowledge-ai")
+            navigate("/admin/knowledge-ai")
           }
           className="rounded-xl border border-[#374151] px-5 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/5 hover:text-white"
         >

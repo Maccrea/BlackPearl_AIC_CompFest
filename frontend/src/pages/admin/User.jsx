@@ -378,10 +378,6 @@ export default function UserManagement() {
                 />
 
               </div>
-
-
-              {/* ROLE */}
-
               <div>
 
                 <label className="mb-2 block text-sm font-medium text-gray-300">
@@ -403,16 +399,9 @@ export default function UserManagement() {
                     Operator
                   </option>
 
-                  {/* <option value="Engineer">
-                    Engineer
-                  </option> */}
-
                 </select>
 
               </div>
-
-
-              {/* STATUS */}
 
               <div>
 
@@ -438,9 +427,6 @@ export default function UserManagement() {
                 </select>
 
               </div>
-
-
-              {/* BUTTONS */}
 
               <div className="flex justify-end gap-3 pt-2">
 

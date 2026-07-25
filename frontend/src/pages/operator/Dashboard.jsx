@@ -4,7 +4,6 @@ import RecentAlerts from "../../components/cards/RecentAlerts.jsx";
 import AiAnalysisProgress from "../../components/ai/AiAnalysisProgress.jsx";
 import MachineDetailCard from "../../components/cards/MachineDetailCard.jsx";
 import AiRecommendation from "../../components/ai/AiRecommendation.jsx";
-import DailyTip from "../../components/common/DailyTip.jsx";
 
 export default function OperatorDashboard() {
   return (
@@ -25,7 +24,7 @@ export default function OperatorDashboard() {
 
         <div className="flex flex-col gap-6 lg:col-span-1">
           <MachineDetailCard />
-          <AiRecommendation />
+          {/* <AiRecommendation /> */}
         </div>
       </div>
 

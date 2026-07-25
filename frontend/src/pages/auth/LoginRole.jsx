@@ -162,7 +162,6 @@ export default function LoginRole() {
               </div>
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#7C3AED] py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9] active:scale-[0.98]"

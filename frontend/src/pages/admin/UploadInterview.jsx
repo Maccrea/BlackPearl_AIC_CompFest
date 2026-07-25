@@ -172,14 +172,13 @@ export default function UploadInterview() {
 
 
   const handleBack = () => {
-    navigate("/knowledge-ai");
+    navigate("/admin/knowledge-ai");
   };
 
 
   return (
     <div className="max-w-4xl space-y-6">
 
-      {/* BACK */}
       <button
         onClick={handleBack}
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
@@ -192,7 +191,6 @@ export default function UploadInterview() {
       </button>
 
 
-      {/* HEADER */}
       <div>
 
         <h1 className="text-3xl font-bold text-white">
@@ -205,9 +203,6 @@ export default function UploadInterview() {
         </p>
 
       </div>
-
-
-      {/* SUCCESS */}
       {uploadSuccess && (
 
         <div className="flex items-start gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-5">
@@ -258,7 +253,6 @@ export default function UploadInterview() {
           className="space-y-6"
         >
 
-          {/* INTERVIEW INFORMATION */}
           <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
 
             <h2 className="mb-5 text-lg font-bold text-white">
@@ -291,8 +285,6 @@ export default function UploadInterview() {
 
           </div>
 
-
-          {/* AUDIO UPLOAD */}
           <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
 
             <h2 className="mb-5 text-lg font-bold text-white">
@@ -404,8 +396,6 @@ export default function UploadInterview() {
 
           </div>
 
-
-          {/* PIPELINE */}
           <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
 
             <div className="text-sm font-semibold text-blue-400">
@@ -424,8 +414,6 @@ export default function UploadInterview() {
 
           </div>
 
-
-          {/* ACTION */}
           <div className="flex justify-end gap-3">
 
             <button

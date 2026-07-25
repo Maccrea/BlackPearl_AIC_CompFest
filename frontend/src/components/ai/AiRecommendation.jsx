@@ -1,9 +1,12 @@
 import React from "react";
 import { Brain } from "lucide-react";
 import dashboard from "../../mock/dashboard";
+import { useNavigate } from "react-router-dom";
+
 
 export default function AiRecommendation() {
   const analysis = dashboard.analysis;
+  const navigate = useNavigate();
 
   return (
     <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#121620] p-6 shadow-[0_0_15px_rgba(124,58,237,0.05)]">
@@ -55,7 +58,11 @@ export default function AiRecommendation() {
         </div>
       </div>
 
-      <button className="w-full rounded-xl bg-[#7C3AED] py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9]">
+      <button 
+      onClick={() =>
+                        navigate(`/operator/ai-analysis`)
+                      }
+      className="w-full rounded-xl bg-[#7C3AED] py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9]">
         View Full Analysis →
       </button>
 

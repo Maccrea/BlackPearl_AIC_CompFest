@@ -31,7 +31,6 @@ export default function AIAnalysis() {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">
           AI Analysis
@@ -41,16 +40,11 @@ export default function AIAnalysis() {
         </p>
       </div>
 
-      {/* Anomaly Alert */}
       <AnomalyAlert analysis={analysis} machine={machine} />
 
-      {/* Detected Anomalies */}
       <DetectedAnomalies analysis={analysis} />
 
-      {/* AI Prediction */}
       <AIPrediction analysis={analysis} />
-
-      {/* Main Flow - Similar Case vs New Recommendation */}
       {similarCase.found ? (
         <SimilarCaseFound similarCase={similarCase} />
       ) : (
@@ -150,7 +144,6 @@ function AnomalyMetric({ anomaly }) {
   );
 }
 
-/* ============ AI Prediction Component ============ */
 function AIPrediction({ analysis }) {
   return (
     <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#121620] p-6">
@@ -200,12 +193,9 @@ function AIPrediction({ analysis }) {
     </div>
   );
 }
-
-/* ============ Similar Case Found Component ============ */
 function SimilarCaseFound({ similarCase }) {
   return (
     <div className="space-y-6">
-      {/* Match Score */}
       <div className="rounded-2xl border border-[#10B981]/30 bg-[#10B981]/5 p-6">
         <div className="mb-4 flex items-center gap-3">
           <div className="rounded-xl bg-[#10B981]/10 p-3 text-[#10B981]">
@@ -240,7 +230,6 @@ function SimilarCaseFound({ similarCase }) {
         </div>
       </div>
 
-      {/* Historical Case Details */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
         <h3 className="mb-4 text-lg font-bold text-white">
           Historical Case Details
@@ -313,7 +302,6 @@ function SimilarCaseFound({ similarCase }) {
         </div>
       </div>
 
-      {/* Action Button */}
       <div className="flex gap-3">
         <button className="flex-1 rounded-xl border border-[#10B981]/30 bg-[#10B981]/10 px-4 py-3 font-semibold text-[#10B981] transition hover:bg-[#10B981]/20">
           Follow This Solution
@@ -326,11 +314,9 @@ function SimilarCaseFound({ similarCase }) {
   );
 }
 
-/* ============ New Recommendation Component (Similar Case Not Found) ============ */
 function NewRecommendation({ analysis }) {
   return (
     <div className="space-y-6">
-      {/* No Similar Case Alert */}
       <div className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-6">
         <div className="mb-4 flex items-center gap-3">
           <div className="rounded-xl bg-[#F59E0B]/10 p-3 text-[#F59E0B]">
@@ -347,7 +333,6 @@ function NewRecommendation({ analysis }) {
         </div>
       </div>
 
-      {/* AI Recommendation */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
         <h3 className="mb-4 text-lg font-bold text-white">
           AI Recommended Actions
@@ -376,7 +361,6 @@ function NewRecommendation({ analysis }) {
         </div>
       </div>
 
-      {/* Confidence Note */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
         <div className="flex items-center gap-2 text-sm">
           <AlertTriangle size={18} className="text-[#F59E0B]" />
@@ -391,7 +375,6 @@ function NewRecommendation({ analysis }) {
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-3">
         <button className="flex-1 rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 font-semibold text-white transition hover:border-[#7C3AED] hover:bg-[#7C3AED]/10">
           Request Engineer Validation
@@ -405,7 +388,6 @@ function NewRecommendation({ analysis }) {
   );
 }
 
-/* ============ Helper Functions ============ */
 function getRecommendationTitle(parameter) {
   const titles = {
     "Temperature": "Check Cooling System",

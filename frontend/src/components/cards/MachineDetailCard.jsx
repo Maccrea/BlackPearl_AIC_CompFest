@@ -37,7 +37,7 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
       onClick(machineData);
     } else {
       navigate(
-        `/operator/machine-status?machine=${machineData.id}`
+        `/operator/machine-detail/${machineData.id}`
       );
     }
   };
@@ -98,7 +98,6 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
         </div>
       )}
 
-      {/* Parameters */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
         <Parameter
@@ -135,7 +134,6 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
 
       </div>
 
-      {/* Health */}
       <div className="mt-5 rounded-xl border border-[#1F2937] bg-[#0B0E14] p-4">
 
         <div className="mb-2 flex items-center justify-between">
@@ -144,13 +142,12 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
             Machine Health
           </span>
 
-          <span className={`text-sm font-bold ${
-            machineData.health > 70
+          <span className={`text-sm font-bold ${machineData.health > 70
               ? "text-[#10B981]"
               : machineData.health > 40
-              ? "text-[#F59E0B]"
-              : "text-[#EF4444]"
-          }`}>
+                ? "text-[#F59E0B]"
+                : "text-[#EF4444]"
+            }`}>
             {machineData.health}%
           </span>
 
@@ -159,13 +156,12 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
         <div className="h-2 overflow-hidden rounded-full bg-[#1F2937]">
 
           <div
-            className={`h-full rounded-full ${
-              machineData.health > 70
+            className={`h-full rounded-full ${machineData.health > 70
                 ? "bg-[#10B981]"
                 : machineData.health > 40
-                ? "bg-[#F59E0B]"
-                : "bg-[#EF4444]"
-            }`}
+                  ? "bg-[#F59E0B]"
+                  : "bg-[#EF4444]"
+              }`}
             style={{
               width: `${machineData.health}%`,
             }}
@@ -175,7 +171,6 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
 
       </div>
 
-      {/* Action */}
       <button
         onClick={handleNavigate}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm font-medium text-white transition hover:border-[#A855F7]/50 hover:bg-[#A855F7]/10"
@@ -190,7 +185,6 @@ export default function MachineDetailCard({ machine = null, onClick = null }) {
   );
 }
 
-/* Parameter Component - Reusable metric display */
 function Parameter({ icon: Icon, label, value, threshold, actual }) {
   const isAbnormal = actual > threshold;
 

@@ -4,6 +4,9 @@ import AdminLayout from "../layouts/AdminLayout";
 import OperatorLayout from "../layouts/OperatorLayout";
 
 import Login from "../pages/auth/LoginRole"
+import Welcome from "../pages/Welcome";
+import Help from "../pages/Help";
+
 
 import AdminDashboard from "../pages/admin/Dashboard";
 import KnowledgeAI from "../pages/admin/Knowledge";
@@ -20,8 +23,18 @@ import AIAnalysis from "../pages/operator/AIAnalysis";
 import MachineStatus from "../pages/operator/MachineStatus";
 import Recommendation from "../pages/operator/Recommendation";
 import Validation from "../pages/operator/Validation";
+import MachineDetail from "../pages/operator/MachineDetail";
+
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Welcome />,
+  },
+  {
+    path: "/help",
+    element: <Help />,
+  },
   {
     path: "/login",
     element: <Login />,
@@ -68,6 +81,10 @@ export const router = createBrowserRouter([
     path: "/operator",
     element: <OperatorLayout />,
     children: [
+      {
+        path: "machine-detail/:id",
+        element: <MachineDetail />,
+      },
       {
         index: true,
         element: <OperatorDashboard />,

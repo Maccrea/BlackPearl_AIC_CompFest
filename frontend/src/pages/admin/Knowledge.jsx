@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 export default function KnowledgeAI() {
   const navigate = useNavigate();
 
-  // MOCK DATA
-  // Nanti diganti dengan GET dari FastAPI
   const knowledgeCases = [
     {
       id: 1,
@@ -29,7 +27,6 @@ export default function KnowledgeAI() {
   return (
     <div className="space-y-6">
 
-      {/* HEADER */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
 
         <div>
@@ -43,9 +40,8 @@ export default function KnowledgeAI() {
           </p>
         </div>
 
-        {/* UPLOAD INTERVIEW */}
         <button
-          onClick={() => navigate("/knowledge-ai/upload")}
+          onClick={() => navigate("/admin/knowledge-ai/upload")}
           className="flex items-center justify-center gap-2 rounded-xl bg-[#7C3AED] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
         >
           <UploadCloud size={18} />
@@ -55,7 +51,6 @@ export default function KnowledgeAI() {
       </div>
 
 
-      {/* PIPELINE INFO */}
       <div className="rounded-2xl border border-[#7C3AED]/20 bg-[#7C3AED]/5 p-5">
 
         <div className="flex items-start gap-4">
@@ -92,7 +87,6 @@ export default function KnowledgeAI() {
       </div>
 
 
-      {/* KNOWLEDGE BASE */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
 
         <div className="mb-5">
@@ -182,7 +176,7 @@ export default function KnowledgeAI() {
 
                     <button
                       onClick={() =>
-                        navigate(`/knowledge-ai/${item.id}`)
+                        navigate(`/admin/knowledge-ai/${item.id}`)
                       }
                       className="inline-flex items-center gap-2 rounded-lg border border-[#374151] px-3 py-2 text-xs font-medium text-gray-300 transition hover:bg-white/5 hover:text-white"
                     >

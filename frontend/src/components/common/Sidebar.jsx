@@ -14,7 +14,7 @@ import {
   Hexagon,
   LogOut,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 
 import { NavLink } from "react-router-dom";
@@ -99,17 +99,19 @@ export default function Sidebar({ role = "operator" }) {
       ? [menuSections.admin]
       : [menuSections.operator];
 
+  const navigate = useNavigate();
+
   return (
     <aside className="sidebar flex w-[260px] shrink-0 flex-col border-r border-[#1F2937] bg-[#0B0E14]">
 
       <div className="px-6 pt-8 pb-6">
         <div className="flex items-center gap-3">
 
-          <img
-            src={logo}
-            alt="tanya SEPUH"
-            className="h-10 w-10 object-contain"
+          <BrainCircuit
+            size={50}
+            className="text-[#A855F7]"
           />
+
 
           <div>
             <h2 className="text-white font-bold text-[16px]">
@@ -124,7 +126,6 @@ export default function Sidebar({ role = "operator" }) {
         </div>
       </div>
 
-      {/* Menu */}
 
       <div className="flex-1 overflow-y-auto px-4">
 
@@ -197,6 +198,7 @@ export default function Sidebar({ role = "operator" }) {
           <LogOut
             size={18}
             className="text-[#8B95A7] hover:text-white cursor-pointer"
+            onClick={() => navigate("/login")}
           />
 
         </div>

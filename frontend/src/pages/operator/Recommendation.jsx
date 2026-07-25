@@ -7,8 +7,17 @@ import {
   ArrowRight,
 } from "lucide-react";
 import dashboard from "../../mock/dashboard";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Recommendation() {
+  const navigate = useNavigate();
+
+  const engineerValidation = () => {
+    navigate(
+      "/operator/validation"
+    );
+  };
   const analysis = dashboard.anomalyAnalysis;
   const [selectedActions, setSelectedActions] = useState([]);
 
@@ -25,7 +34,7 @@ export default function Recommendation() {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
+
       <div>
         <h1 className="text-3xl font-bold text-white">
           AI Recommendation
@@ -36,7 +45,6 @@ export default function Recommendation() {
         </p>
       </div>
 
-      {/* AI Prediction Summary */}
       <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#121620] p-6">
 
         <div className="flex items-center gap-3 mb-4">
@@ -81,7 +89,6 @@ export default function Recommendation() {
 
       </div>
 
-      {/* Detected Issues */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
 
         <h2 className="mb-4 text-lg font-bold text-white">
@@ -104,7 +111,6 @@ export default function Recommendation() {
 
       </div>
 
-      {/* Recommended Actions */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
 
         <div className="mb-6 flex items-center gap-3">
@@ -147,7 +153,6 @@ export default function Recommendation() {
 
       </div>
 
-      {/* Important Note */}
       <div className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-6">
 
         <div className="flex items-start gap-4">
@@ -171,14 +176,16 @@ export default function Recommendation() {
 
       </div>
 
-      {/* Action Buttons */}
       <div className="flex flex-col gap-3 sm:flex-row">
 
         <button className="flex-1 rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 font-semibold text-white transition hover:border-[#7C3AED] hover:bg-[#7C3AED]/10">
           Back
         </button>
 
-        <button className="flex-1 rounded-xl bg-[#7C3AED] px-4 py-3 font-semibold text-white transition hover:bg-[#7C3AED]/90 flex items-center justify-center gap-2">
+        <button
+          onClick={engineerValidation}
+          className="relative z-10 flex-1 rounded-xl bg-[#7C3AED] px-4 py-3 font-semibold text-white transition hover:bg-[#7C3AED]/90 flex items-center justify-center gap-2"
+        >
           Lanjut ke Engineer Validation
           <ArrowRight size={16} />
         </button>
@@ -189,7 +196,6 @@ export default function Recommendation() {
   );
 }
 
-/* ============ Action Card Component ============ */
 function ActionCard({ index, anomaly, isSelected, onToggle }) {
   const getTitle = (param) => {
     const titles = {
@@ -212,11 +218,10 @@ function ActionCard({ index, anomaly, isSelected, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      className={`cursor-pointer rounded-xl border p-4 transition ${
-        isSelected
+      className={`cursor-pointer rounded-xl border p-4 transition ${isSelected
           ? "border-[#7C3AED]/40 bg-[#7C3AED]/10"
           : "border-[#1F2937] bg-[#0B0E14]"
-      }`}
+        }`}
     >
 
       <div className="flex items-start gap-4">
@@ -237,11 +242,10 @@ function ActionCard({ index, anomaly, isSelected, onToggle }) {
 
         </div>
 
-        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition ${
-          isSelected
+        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition ${isSelected
             ? "bg-[#7C3AED] text-white"
             : "border border-[#374151] bg-[#0B0E14]"
-        }`}>
+          }`}>
           {isSelected && (
             <CheckCircle2 size={18} />
           )}

@@ -95,7 +95,6 @@ const dashboard = {
     },
   ],
 
-  // Knowledge Base - Historical cases
   knowledgeBase: [
     {
       id: "CASE-001",
@@ -141,7 +140,6 @@ const dashboard = {
     },
   ],
 
-  // Current Anomaly Analysis
   anomalyAnalysis: {
     machineId: 5,
     machineName: "Machine E",
@@ -176,7 +174,6 @@ const dashboard = {
     timestamp: "2026-07-24 09:22",
   },
 
-  // Similar Case Match Result
   similarCaseMatch: {
     found: true,
     caseId: "CASE-001",

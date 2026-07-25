@@ -261,10 +261,6 @@ export default function UploadData() {
   return (
     <div className="space-y-6">
 
-      {/* ==============================
-          PAGE HEADER
-      ============================== */}
-
       <div>
         <h1 className="text-3xl font-bold text-white">
           Upload Dataset
@@ -275,13 +271,8 @@ export default function UploadData() {
         </p>
       </div>
 
-      {/* ==============================
-          UPLOAD CARD
-      ============================== */}
-
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-8">
 
-        {/* DROPZONE */}
 
         {!selectedFile && (
           <div
@@ -295,13 +286,9 @@ export default function UploadData() {
             }`}
           >
 
-            {/* ICON */}
-
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
               <UploadCloud size={32} />
             </div>
-
-            {/* TITLE */}
 
             <h2 className="text-xl font-bold text-white">
               Drag & Drop Dataset
@@ -315,8 +302,6 @@ export default function UploadData() {
               Mendukung CSV, Excel (.xlsx, .xls), dan JSON
             </p>
 
-            {/* FILE INPUT */}
-
             <input
               ref={fileInputRef}
               type="file"
@@ -324,8 +309,6 @@ export default function UploadData() {
               onChange={handleInputChange}
               className="hidden"
             />
-
-            {/* CHOOSE FILE */}
 
             <button
               type="button"
@@ -338,18 +321,12 @@ export default function UploadData() {
           </div>
         )}
 
-        {/* ==============================
-            SELECTED FILE
-        ============================== */}
-
         {selectedFile && (
           <div className="space-y-5">
 
             <div className="rounded-xl border border-[#30363D] bg-[#0B0E14] p-5">
 
               <div className="flex items-center justify-between">
-
-                {/* FILE INFO */}
 
                 <div className="flex items-center gap-4">
 
@@ -369,7 +346,7 @@ export default function UploadData() {
 
                 </div>
 
-                {/* REMOVE */}
+    
 
                 <button
                   type="button"
@@ -383,8 +360,6 @@ export default function UploadData() {
               </div>
 
             </div>
-
-            {/* UPLOAD BUTTON */}
 
             <button
               type="button"
@@ -415,10 +390,6 @@ export default function UploadData() {
           </div>
         )}
 
-        {/* ==============================
-            STATUS MESSAGE
-        ============================== */}
-
         {uploadStatus && (
           <div
             className={`mt-5 flex items-start gap-3 rounded-xl border p-4 ${
@@ -448,10 +419,6 @@ export default function UploadData() {
         )}
 
       </div>
-
-      {/* ==============================
-          INFO
-      ============================== */}
 
       <div className="rounded-xl border border-[#1F2937] bg-[#121620] p-5">
 

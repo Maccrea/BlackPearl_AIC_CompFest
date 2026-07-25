@@ -14,7 +14,6 @@ export default function ProductionLine() {
 
   const machines = dashboard.machines || [];
 
-  // Ambil semua production line secara otomatis dari data mesin
   const productionLines = [
     ...new Set(
       machines
@@ -23,22 +22,17 @@ export default function ProductionLine() {
     ),
   ];
 
-  const getMachinesByLine = (line) => {
-    return machines.filter(
-      (machine) => machine.line === line
-    );
-  };
+  const getMachinesByLine = (line) =>
+    machines.filter((machine) => machine.line === line);
 
-  const getStatusCount = (lineMachines, status) => {
-    return lineMachines.filter(
+  const getStatusCount = (lineMachines, status) =>
+    lineMachines.filter(
       (machine) => machine.status === status
     ).length;
-  };
 
   return (
     <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6">
-
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex items-center justify-between">
 
         <div>
           <div className="flex items-center gap-3">
@@ -53,72 +47,93 @@ export default function ProductionLine() {
           </div>
 
           <p className="mt-1 text-sm text-[#8B95A7]">
-            Ringkasan kondisi seluruh production line.
+            Kondisi production line saat ini.
           </p>
         </div>
 
         <button
-          onClick={() =>
-            navigate("/operator/production-line")
-          }
-          className="flex w-fit items-center gap-2 text-sm font-medium text-[#9CA3AF] transition-colors hover:text-white"
+          onClick={() => navigate("/operator/production-line")}
+          className="flex items-center gap-1.5 text-sm font-medium text-[#9CA3AF] transition hover:text-white"
         >
-          Lihat Semua Line
+          Lihat Semua
           <ArrowRight size={16} />
         </button>
 
       </div>
 
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
         {productionLines.map((line) => {
 
-          const lineMachines =
-            getMachinesByLine(line);
+          const lineMachines = getMachinesByLine(line);
 
-          const healthyCount =
-            getStatusCount(
-              lineMachines,
-              "healthy"
-            );
+          const healthyCount = getStatusCount(
+            lineMachines,
+            "healthy"
+          );
 
-          const warningCount =
-            getStatusCount(
-              lineMachines,
-              "warning"
-            );
+          const warningCount = getStatusCount(
+            lineMachines,
+            "warning"
+          );
 
-          const criticalCount =
-            getStatusCount(
-              lineMachines,
-              "critical"
-            );
+          const criticalCount = getStatusCount(
+            lineMachines,
+            "critical"
+          );
 
-          const hasCritical =
-            criticalCount > 0;
+          const hasCritical = criticalCount > 0;
+          const hasWarning = warningCount > 0;
 
-          const hasWarning =
-            warningCount > 0;
+          // Tentukan status keseluruhan line
+          const lineStatus = hasCritical
+            ? "critical"
+            : hasWarning
+            ? "warning"
+            : "healthy";
+
+          const statusConfig = {
+            healthy: {
+              label: "All Systems Normal",
+              color: "text-[#10B981]",
+              bg: "bg-[#10B981]/10",
+              border: "border-[#10B981]/20",
+              icon: CheckCircle2,
+            },
+
+            warning: {
+              label: "Warning Detected",
+              color: "text-[#F59E0B]",
+              bg: "bg-[#F59E0B]/10",
+              border: "border-[#F59E0B]/20",
+              icon: AlertTriangle,
+            },
+
+            critical: {
+              label: "Critical Issue",
+              color: "text-[#EF4444]",
+              bg: "bg-[#EF4444]/10",
+              border: "border-[#EF4444]/20",
+              icon: OctagonAlert,
+            },
+          };
+
+          const config = statusConfig[lineStatus];
+
+          const StatusIcon = config.icon;
 
           return (
             <div
               key={line}
-              className={`rounded-2xl border p-5 transition-all hover:-translate-y-0.5 hover:bg-white/5 ${
-                hasCritical
-                  ? "border-[#EF4444]/40 bg-[#EF4444]/5"
-                  : hasWarning
-                  ? "border-[#F59E0B]/30 bg-[#F59E0B]/5"
-                  : "border-[#1F2937] bg-[#0B0E14]"
-              }`}
+              className={`rounded-xl border ${config.border} bg-[#0B0E14] p-5 transition hover:bg-white/[0.03]`}
             >
 
               <div className="flex items-start justify-between">
 
                 <div className="flex items-center gap-3">
 
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#A78BFA]">
-                    <Factory size={21} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#7C3AED]/10 text-[#A78BFA]">
+                    <Factory size={20} />
                   </div>
 
                   <div>
@@ -126,103 +141,72 @@ export default function ProductionLine() {
                       {line}
                     </h4>
 
-                    <p className="mt-1 text-xs text-[#8B95A7]">
+                    <p className="mt-1 text-xs text-[#6B7280]">
                       {lineMachines.length} machines
                     </p>
                   </div>
 
                 </div>
 
-                {hasCritical ? (
-                  <OctagonAlert
-                    size={19}
-                    className="text-[#EF4444]"
-                  />
-                ) : hasWarning ? (
-                  <AlertTriangle
-                    size={19}
-                    className="text-[#F59E0B]"
-                  />
-                ) : (
-                  <CheckCircle2
-                    size={19}
-                    className="text-[#10B981]"
-                  />
+                <StatusIcon
+                  size={18}
+                  className={config.color}
+                />
+
+              </div>
+              <div
+                className={`mt-5 flex items-center gap-2 rounded-lg ${config.bg} px-3 py-2.5`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    lineStatus === "critical"
+                      ? "bg-[#EF4444]"
+                      : lineStatus === "warning"
+                      ? "bg-[#F59E0B]"
+                      : "bg-[#10B981]"
+                  }`}
+                />
+
+                <span
+                  className={`text-xs font-medium ${config.color}`}
+                >
+                  {config.label}
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-xs">
+
+                {healthyCount > 0 && (
+                  <span className="text-[#10B981]">
+                    {healthyCount} Normal
+                  </span>
+                )}
+
+                {warningCount > 0 && (
+                  <span className="text-[#F59E0B]">
+                    {warningCount} Warning
+                  </span>
+                )}
+
+                {criticalCount > 0 && (
+                  <span className="text-[#EF4444]">
+                    {criticalCount} Critical
+                  </span>
                 )}
 
               </div>
 
-              <div className="mt-5 space-y-2">
 
-                {lineMachines.map((machine) => (
-
-                  <div
-                    key={machine.id}
-                    className="flex items-center justify-between rounded-lg border border-[#1F2937] bg-[#121620] px-3 py-2.5"
-                  >
-
-                    <div className="min-w-0">
-
-                      <div className="truncate text-sm font-medium text-white">
-                        {machine.name}
-                      </div>
-
-                      <div className="mt-0.5 text-[11px] text-[#6B7280]">
-                        {machine.type}
-                      </div>
-
-                    </div>
-
-                    <StatusDot
-                      status={machine.status}
-                    />
-
-                  </div>
-
-                ))}
-
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-
-                <StatusBadge
-                  icon={CheckCircle2}
-                  count={healthyCount}
-                  label="Normal"
-                  color="text-[#10B981]"
-                  bg="bg-[#10B981]/10"
-                />
-
-                <StatusBadge
-                  icon={AlertTriangle}
-                  count={warningCount}
-                  label="Warning"
-                  color="text-[#F59E0B]"
-                  bg="bg-[#F59E0B]/10"
-                />
-
-                <StatusBadge
-                  icon={OctagonAlert}
-                  count={criticalCount}
-                  label="Critical"
-                  color="text-[#EF4444]"
-                  bg="bg-[#EF4444]/10"
-                />
-
-              </div>
-
-
-              {/* View Detail */}
               <button
                 onClick={() =>
                   navigate(
                     `/operator/production-line?line=${encodeURIComponent(line)}`
                   )
                 }
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-[#374151] bg-[#121620] px-4 py-2.5 text-sm font-medium text-[#9CA3AF] transition hover:border-[#7C3AED] hover:bg-[#7C3AED]/10 hover:text-white"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg border border-[#374151] bg-[#121620] px-4 py-2.5 text-xs font-medium text-[#9CA3AF] transition hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/10 hover:text-white"
               >
                 Lihat Detail Line
-                <ArrowRight size={16} />
+                <ArrowRight size={15} />
               </button>
 
             </div>
@@ -230,65 +214,6 @@ export default function ProductionLine() {
         })}
 
       </div>
-
-    </div>
-  );
-}
-
-function StatusDot({ status }) {
-
-  const statusConfig = {
-    healthy: {
-      color: "bg-[#10B981]",
-      label: "Normal",
-    },
-
-    warning: {
-      color: "bg-[#F59E0B]",
-      label: "Warning",
-    },
-
-    critical: {
-      color: "bg-[#EF4444]",
-      label: "Critical",
-    },
-  };
-
-  const config =
-    statusConfig[status] ||
-    statusConfig.healthy;
-
-  return (
-    <div className="flex items-center gap-1.5">
-
-      <span
-        className={`h-2 w-2 rounded-full ${config.color}`}
-      />
-
-      <span className="text-[11px] text-[#8B95A7]">
-        {config.label}
-      </span>
-
-    </div>
-  );
-}
-
-
-function StatusBadge({
-  icon: Icon,
-  count,
-  label,
-  color,
-  bg,
-}) {
-  return (
-    <div
-      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${color} ${bg}`}
-    >
-
-      <Icon size={13} />
-
-      {count} {label}
 
     </div>
   );
