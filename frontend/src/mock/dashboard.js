@@ -71,9 +71,6 @@ const dashboard = {
       vibration: 8.2,
       lastMaintenance: "2026-07-08",
       health: 21,
-      similarCase: true,
-      confidence: 94,
-      prediction: "Motor Overheating",
     },
   ],
 
@@ -97,6 +94,110 @@ const dashboard = {
       time: "09:18",
     },
   ],
+
+  // Knowledge Base - Historical cases
+  knowledgeBase: [
+    {
+      id: "CASE-001",
+      machineType: "Labeling",
+      caseTitle: "Motor Overheating Issue",
+      symptoms: [
+        "Temperature 90°C+",
+        "High vibration (8mm/s+)",
+        "Increased current (18A+)",
+      ],
+      rootCause: "Cooling fan malfunction",
+      previousSolution: [
+        "Inspect cooling fan for damage",
+        "Clean air filter thoroughly",
+        "Check motor load balance",
+      ],
+      result: "Resolved",
+      confidence: 94,
+      dateAdded: "2026-06-15",
+      engineer: "Ahmad Riyanto",
+      tags: ["cooling", "motor", "temperature"],
+    },
+    {
+      id: "CASE-002",
+      machineType: "Filling",
+      caseTitle: "High Vibration Issue",
+      symptoms: [
+        "Vibration 5.5mm/s+",
+        "Temperature normal",
+        "Current slightly elevated",
+      ],
+      rootCause: "Bearing wear",
+      previousSolution: [
+        "Inspect bearing condition",
+        "Check alignment",
+        "Apply lubrication if needed",
+      ],
+      result: "Resolved",
+      confidence: 88,
+      dateAdded: "2026-06-20",
+      engineer: "Siti Nurhaliza",
+      tags: ["vibration", "bearing", "alignment"],
+    },
+  ],
+
+  // Current Anomaly Analysis
+  anomalyAnalysis: {
+    machineId: 5,
+    machineName: "Machine E",
+    machineType: "Labeling",
+    line: "Production Line C",
+    status: "critical",
+    detectedAnomalies: [
+      {
+        parameter: "Temperature",
+        value: 92,
+        unit: "°C",
+        threshold: 75,
+        status: "critical",
+      },
+      {
+        parameter: "Vibration",
+        value: 8.2,
+        unit: "mm/s",
+        threshold: 5,
+        status: "critical",
+      },
+      {
+        parameter: "Current",
+        value: 18.5,
+        unit: "A",
+        threshold: 15,
+        status: "warning",
+      },
+    ],
+    aiPrediction: "Motor Overheating",
+    aiConfidence: 94,
+    timestamp: "2026-07-24 09:22",
+  },
+
+  // Similar Case Match Result
+  similarCaseMatch: {
+    found: true,
+    caseId: "CASE-001",
+    machineType: "Labeling",
+    caseTitle: "Motor Overheating Issue",
+    similarityScore: 94,
+    matchedSymptoms: [
+      "Temperature 92°C (similar to 90°C+)",
+      "Vibration 8.2mm/s (similar to 8mm/s+)",
+      "Current 18.5A (similar to 18A+)",
+    ],
+    rootCause: "Cooling fan malfunction",
+    previousSolution: [
+      "Inspect cooling fan for damage",
+      "Clean air filter thoroughly",
+      "Check motor load balance",
+    ],
+    result: "Previously Resolved",
+    engineer: "Ahmad Riyanto",
+    dateAdded: "2026-06-15",
+  },
 
   analysis: {
     progress: 76,

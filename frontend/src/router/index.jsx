@@ -3,6 +3,8 @@ import { createBrowserRouter } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import OperatorLayout from "../layouts/OperatorLayout";
 
+import Login from "../pages/auth/LoginRole"
+
 import AdminDashboard from "../pages/admin/Dashboard";
 import KnowledgeAI from "../pages/admin/Knowledge";
 import UploadData from "../pages/admin/Upload";
@@ -12,10 +14,8 @@ import Settings from "../pages/admin/Settings";
 import UploadInterview from "../pages/admin/UploadInterview"
 import KnowledgeDetail from "../pages/admin/KnowledgeDetail"
 
-
-
 import OperatorDashboard from "../pages/operator/Dashboard";
-import ProductionLine from "../components/cards/ProductionLine";
+import ProductionLine from "../pages/operator/ProductionLine";
 import AIAnalysis from "../pages/operator/AIAnalysis";
 import MachineStatus from "../pages/operator/MachineStatus";
 import Recommendation from "../pages/operator/Recommendation";
@@ -23,7 +23,11 @@ import Validation from "../pages/operator/Validation";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/admin",
     element: <AdminLayout />,
     children: [
       {

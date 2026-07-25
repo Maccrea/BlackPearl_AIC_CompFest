@@ -29,7 +29,7 @@ export default function OperatorDashboard() {
         </div>
       </div>
 
-      <DailyTip />
+      {/* <DailyTip /> */}
 
     </div>
   );

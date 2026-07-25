@@ -22,7 +22,7 @@ export default function Settings() {
           <input
             type="text"
             className="mt-2 w-full rounded-xl border border-[#1F2937] bg-[#0F172A] p-3 text-white transition-colors focus:border-[#3B82F6] focus:outline-none"
-            defaultValue="Black Pearl AI"
+            defaultValue="tanya SEPUH"
           />
         </div>
 

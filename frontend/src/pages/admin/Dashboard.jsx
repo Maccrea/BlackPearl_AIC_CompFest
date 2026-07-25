@@ -59,7 +59,7 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
               <span className="text-gray-400">
                 MQTT
               </span>
@@ -67,7 +67,7 @@ export default function Dashboard() {
               <span className="text-yellow-400">
                 Delay 120 ms
               </span>
-            </div>
+            </div> */}
 
           </div>
 

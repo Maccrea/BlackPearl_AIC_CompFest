@@ -113,7 +113,6 @@ export default function MachineManagement() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER SECTION */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">Machine Management</h1>
@@ -130,7 +129,6 @@ export default function MachineManagement() {
         </button>
       </div>
 
-      {/* SEARCH SECTION */}
       <div className="relative max-w-md">
         <Search
           size={18}
@@ -145,7 +143,6 @@ export default function MachineManagement() {
         />
       </div>
 
-      {/* TABLE SECTION */}
       <div className="overflow-hidden rounded-2xl border border-[#1F2937] bg-[#121620]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -225,7 +222,6 @@ export default function MachineManagement() {
         )}
       </div>
 
-      {/* MODAL SECTION */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-lg rounded-2xl border border-[#1F2937] bg-[#121620] p-6 shadow-2xl">
@@ -294,7 +290,7 @@ export default function MachineManagement() {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">
                   Status
                 </label>
@@ -308,7 +304,7 @@ export default function MachineManagement() {
                   <option value="warning">Warning</option>
                   <option value="critical">Critical</option>
                 </select>
-              </div>
+              </div> */}
 
               <div className="flex justify-end gap-3 pt-4">
                 <button

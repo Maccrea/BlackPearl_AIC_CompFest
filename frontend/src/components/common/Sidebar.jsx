@@ -15,44 +15,46 @@ import {
   LogOut,
 } from "lucide-react";
 
+import logo from "../../assets/logo.png";
+
 import { NavLink } from "react-router-dom";
 
 const menuSections = {
   operator: {
-  title: "OPERATOR PANEL",
-  items: [
-    {
-      name: "Dashboard",
-      path: "/operator",
-      icon: Home,
-    },
-    {
-      name: "Production Line",
-      path: "/operator/production-line",
-      icon: Network,
-    },
-    {
-      name: "Machine Status",
-      path: "/operator/machine-status",
-      icon: MonitorCheck,
-    },
-    {
-      name: "AI Analysis",
-      path: "/operator/ai-analysis",
-      icon: BrainCircuit,
-    },
-    {
-      name: "Recommendation",
-      path: "/operator/recommendation",
-      icon: Sparkles,
-    },
-    {
-      name: "Engineer Validation",
-      path: "/operator/validation",
-      icon: ShieldCheck,
-    },
-  ],
-},
+    title: "OPERATOR PANEL",
+    items: [
+      {
+        name: "Dashboard",
+        path: "/operator",
+        icon: Home,
+      },
+      {
+        name: "Production Line",
+        path: "/operator/production-line",
+        icon: Network,
+      },
+      {
+        name: "Machine Status",
+        path: "/operator/machine-status",
+        icon: MonitorCheck,
+      },
+      {
+        name: "AI Analysis",
+        path: "/operator/ai-analysis",
+        icon: BrainCircuit,
+      },
+      {
+        name: "Recommendation",
+        path: "/operator/recommendation",
+        icon: Sparkles,
+      },
+      {
+        name: "Engineer Validation",
+        path: "/operator/validation",
+        icon: ShieldCheck,
+      },
+    ],
+  },
 
   admin: {
     title: "ADMIN PANEL",
@@ -60,32 +62,32 @@ const menuSections = {
       {
         name: "Dashboard",
         icon: Home,
-        path: "/",
+        path: "/admin",
       },
       {
         name: "Knowledge AI",
         icon: BookOpen,
-        path: "/knowledge-ai",
+        path: "/admin/knowledge-ai",
       },
       {
         name: "Upload Data",
         icon: Upload,
-        path: "/upload-data",
+        path: "/admin/upload-data",
       },
       {
         name: "Manajemen Mesin",
         icon: Factory,
-        path: "/machines",
+        path: "/admin/machines",
       },
       {
         name: "Pengguna",
         icon: Users,
-        path: "/users",
+        path: "/admin/users",
       },
       {
         name: "Pengaturan",
         icon: Settings,
-        path: "/settings",
+        path: "/admin/settings",
       },
     ],
   },
@@ -103,19 +105,19 @@ export default function Sidebar({ role = "operator" }) {
       <div className="px-6 pt-8 pb-6">
         <div className="flex items-center gap-3">
 
-          <Hexagon
-            size={34}
-            fill="#7C3AED"
-            stroke="#A78BFA"
+          <img
+            src={logo}
+            alt="tanya SEPUH"
+            className="h-10 w-10 object-contain"
           />
 
           <div>
             <h2 className="text-white font-bold text-[16px]">
-              LegacyMind AI
+              tanya SEPUH
             </h2>
 
             <p className="text-[#8B95A7] text-[11px]">
-              Smart Factory Assistant
+              System for Equipment Problem Understanding and Handling
             </p>
           </div>
 
