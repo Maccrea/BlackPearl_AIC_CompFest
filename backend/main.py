@@ -1,18 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 import os
 import json
 from dotenv import load_dotenv
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-app = FastAPI(title="LegacyMind AI API")
+app = FastAPI(title="Tanya SEPUH API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +33,7 @@ except FileNotFoundError:
 
 vectorizer = TfidfVectorizer()
 tfidf_matrix = None
+
 if historical_cases:
     case_symptoms = [case["symptoms"] for case in historical_cases]
     tfidf_matrix = vectorizer.fit_transform(case_symptoms)
@@ -51,7 +51,7 @@ def analyze_symptoms(data: SymptomInput):
         best_score = similarities[best_match_idx]
         best_match = historical_cases[best_match_idx]
 
-    THRESHOLD = 0.65
+    THRESHOLD = 0.65 
     
     if best_score >= THRESHOLD:
         return {
@@ -62,7 +62,7 @@ def analyze_symptoms(data: SymptomInput):
         }
     else:
         prompt = f"""
-        Anda adalah LegacyMind AI, asisten pemeliharaan mesin industri.
+        Anda adalah Tanya SEPUH AI, asisten pemeliharaan mesin industri.
         Tidak ada kasus serupa di database. Analisis gejala baru pada mesin {data.machine_type}: "{data.symptoms}"
         
         Keluarkan HANYA hasil dalam format JSON persis seperti ini:
@@ -73,7 +73,6 @@ def analyze_symptoms(data: SymptomInput):
             "recommendations": ["Saran 1", "Saran 2"]
         }}
         """
-        
         try:
             chat_completion = client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
@@ -84,7 +83,7 @@ def analyze_symptoms(data: SymptomInput):
             return json.loads(chat_completion.choices[0].message.content)
         except Exception as e:
             return {"error": str(e)}
-        
+
 class ValidationInput(BaseModel):
     symptoms: str
     root_cause: str
@@ -101,7 +100,6 @@ def validate_new_case(data: ValidationInput):
         cases = []
         
     new_id = f"C{(len(cases) + 1):03d}"
-    
     new_case = {
         "id": new_id,
         "symptoms": data.symptoms,
@@ -120,3 +118,59 @@ def validate_new_case(data: ValidationInput):
     tfidf_matrix = vectorizer.fit_transform(case_symptoms)
     
     return {"message": "Knowledge Graph berhasil di-update! Sistem telah mempelajari kasus ini."}
+
+@app.get("/api/dashboard")
+def get_dashboard():
+    return {
+        "stats": {
+            "normal": 3,
+            "warning": 1,
+            "critical": 1,
+            "efficiency": 98
+        },
+        "recent_alerts": [
+            {"id": 1, "machine": "Machine E", "message": "Motor mencapai 92°C", "time": "09:22", "type": "critical"},
+            {"id": 2, "machine": "Machine C", "message": "Vibration meningkat", "time": "09:18", "type": "warning"}
+        ],
+        "system_status": {
+            "api": "Online",
+            "ai_engine": "Running",
+            "database": "Connected"
+        }
+    }
+
+@app.get("/api/knowledge")
+def get_knowledge_list():
+    return [
+        {"id": 1, "knowledge": "Motor Overheating", "category": "Motor & Cooling System", "created": "20 Jul 2026", "confidence": 94, "status": "Active"},
+        {"id": 2, "knowledge": "Excessive Machine Vibration", "category": "Machine Vibration", "created": "18 Jul 2026", "confidence": 91, "status": "Active"}
+    ]
+
+@app.post("/api/upload")
+def upload_dataset(file: UploadFile = File(...)):
+    return {"filename": file.filename, "message": "File berhasil diunggah dan sedang diproses oleh AI."}
+
+@app.post("/api/knowledge/upload-interview")
+def upload_interview(title: str = Form(...), file: UploadFile = File(...)):
+    return {
+        "filename": file.filename,
+        "title": title,
+        "message": "Interview berhasil diunggah dan sedang diproses oleh pipeline Speech-to-Text."
+    }
+
+@app.get("/api/machines")
+def get_machines():
+    return [
+        {"id": "M1", "name": "Machine A", "type": "Conveyor", "line": "Production Line A", "status": "Healthy", "temp": "45°C", "health": 98},
+        {"id": "M2", "name": "Machine B", "type": "Packaging", "line": "Production Line A", "status": "Healthy", "temp": "47°C", "health": 96},
+        {"id": "M3", "name": "Machine C", "type": "Filling", "line": "Production Line B", "status": "Warning", "temp": "69°C", "health": 74},
+        {"id": "M4", "name": "Machine D", "type": "Sealing", "line": "Production Line B", "status": "Healthy", "temp": "43°C", "health": 99},
+        {"id": "M5", "name": "Machine E", "type": "Labeling", "line": "Production Line C", "status": "Critical", "temp": "92°C", "health": 21}
+    ]
+
+@app.get("/api/users")
+def get_users():
+    return [
+        {"id": 1, "name": "Administrator", "email": "admin@legacymind.ai", "role": "Admin", "status": "Active"},
+        {"id": 2, "name": "Operator 1", "email": "operator@legacymind.ai", "role": "Operator", "status": "Active"}
+    ]
