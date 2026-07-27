@@ -1,522 +1,351 @@
 import React, { useMemo, useState } from "react";
 import {
-  ArrowRight,
   Settings,
   CheckCircle2,
   AlertTriangle,
   OctagonAlert,
   Factory,
   ChevronDown,
+  Thermometer,
+  Activity,
+  Gauge,
+  Zap,
+  Search,
+  Filter,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import dashboard from "../../mock/dashboard";
 
-export default function ProductionLine() {
-  const navigate = useNavigate();
+const STATUS_CONFIG = {
+  healthy: {
+    label: "Normal",
+    color: "text-[#10B981]",
+    bg: "bg-[#10B981]/10",
+    border: "border-[#10B981]/30",
+    icon: CheckCircle2,
+  },
+  warning: {
+    label: "Warning",
+    color: "text-[#F59E0B]",
+    bg: "bg-[#F59E0B]/10",
+    border: "border-[#F59E0B]/30",
+    icon: AlertTriangle,
+  },
+  critical: {
+    label: "Critical",
+    color: "text-[#EF4444]",
+    bg: "bg-[#EF4444]/10",
+    border: "border-[#EF4444]/40",
+    icon: OctagonAlert,
+  },
+};
 
+const PRODUCTION_LINES = [
+  { id: "Production Line A", name: "Production Line A", type: "Packaging" },
+  { id: "Production Line B", name: "Production Line B", type: "Filling & Sealing" },
+  { id: "Production Line C", name: "Production Line C", type: "Labeling" },
+];
+
+export default function ProductionDashboard() {
   const machines = dashboard.machines || [];
 
   const [selectedLine, setSelectedLine] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Production line berdasarkan data yang ada di dashboard.js
-  const productionLines = [
-    {
-      id: "Production Line A",
-      name: "Production Line A",
-      type: "Packaging",
-    },
-    {
-      id: "Production Line B",
-      name: "Production Line B",
-      type: "Filling & Sealing",
-    },
-    {
-      id: "Production Line C",
-      name: "Production Line C",
-      type: "Labeling",
-    },
-  ];
+  const filteredMachines = useMemo(() => {
+    return machines.filter((machine) => {
+      const matchLine = selectedLine === "all" || machine.line === selectedLine;
+      const matchStatus = statusFilter === "all" || machine.status === statusFilter;
+      const matchSearch =
+        machine.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        machine.type?.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const statusConfig = {
-    healthy: {
-      label: "Normal",
-      color: "text-[#10B981]",
-      bg: "bg-[#10B981]",
-      softBg: "bg-[#10B981]/5",
-      border: "border-[#10B981]/20",
-      icon: CheckCircle2,
-    },
+      return matchLine && matchStatus && matchSearch;
+    });
+  }, [machines, selectedLine, statusFilter, searchQuery]);
 
-    warning: {
-      label: "Warning",
-      color: "text-[#F59E0B]",
-      bg: "bg-[#F59E0B]",
-      softBg: "bg-[#F59E0B]/5",
-      border: "border-[#F59E0B]/30",
-      icon: AlertTriangle,
-    },
+  const baseMachinesForCount = machines.filter(
+    (m) => (selectedLine === "all" || m.line === selectedLine) &&
+           (m.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            m.type?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-    critical: {
-      label: "Critical",
-      color: "text-[#EF4444]",
-      bg: "bg-[#EF4444]",
-      softBg: "bg-[#EF4444]/5",
-      border: "border-[#EF4444]/40",
-      icon: OctagonAlert,
-    },
+  const statusCount = {
+    all: baseMachinesForCount.length,
+    healthy: baseMachinesForCount.filter((m) => m.status === "healthy").length,
+    warning: baseMachinesForCount.filter((m) => m.status === "warning").length,
+    critical: baseMachinesForCount.filter((m) => m.status === "critical").length,
   };
 
-  // Filter production line
   const visibleLines = useMemo(() => {
-    if (selectedLine === "all") {
-      return productionLines;
-    }
-
-    return productionLines.filter(
-      (line) => line.id === selectedLine
+    const lines = selectedLine === "all" 
+        ? PRODUCTION_LINES 
+        : PRODUCTION_LINES.filter((l) => l.id === selectedLine);
+        
+    return lines.filter(line => 
+      filteredMachines.some(m => m.line === line.id)
     );
-  }, [selectedLine]);
-
-  // Ambil mesin berdasarkan field "line"
-  const getMachinesByLine = (lineName) => {
-    return machines.filter(
-      (machine) => machine.line === lineName
-    );
-  };
-
-  const getStatusCount = (lineMachines, status) => {
-    return lineMachines.filter(
-      (machine) => machine.status === status
-    ).length;
-  };
+  }, [selectedLine, filteredMachines]);
 
   return (
-    <div className="space-y-6">
-
+    <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            Production Line
-          </h1>
-
+          <h1 className="text-3xl font-bold text-white">Production Dashboard</h1>
           <p className="mt-1 text-[#9CA3AF]">
-            Monitor kondisi dan alur seluruh production line.
+            Monitor kondisi, parameter, dan alur seluruh production line terpadu.
           </p>
         </div>
 
         <div className="relative w-full sm:w-[280px]">
-
           <select
             value={selectedLine}
             onChange={(e) => setSelectedLine(e.target.value)}
             className="w-full appearance-none rounded-xl border border-[#374151] bg-[#121620] px-4 py-3 pr-10 text-sm font-medium text-white outline-none transition focus:border-[#7C3AED]"
           >
-            <option value="all">
-              All Production Lines
-            </option>
-
-            {productionLines.map((line) => (
-              <option
-                key={line.id}
-                value={line.id}
-              >
-                {line.name}
-              </option>
+            <option value="all">All Production Lines</option>
+            {PRODUCTION_LINES.map((line) => (
+              <option key={line.id} value={line.id}>{line.name}</option>
             ))}
           </select>
-
           <ChevronDown
             size={17}
             className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
           />
-
         </div>
-
       </div>
 
-      <div className="flex w-fit items-center gap-2 rounded-full bg-[#10B981]/10 px-3 py-1.5 text-xs font-semibold text-[#10B981]">
-
-        <span className="h-2 w-2 animate-pulse rounded-full bg-[#10B981]" />
-
-        Monitoring Active
-
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SummaryCard
+          label="Healthy Machines"
+          count={statusCount.healthy}
+          icon={CheckCircle2}
+          color="text-[#10B981]"
+          border="border-[#10B981]/20"
+          bg="bg-[#10B981]/10"
+        />
+        <SummaryCard
+          label="Warning Machines"
+          count={statusCount.warning}
+          icon={AlertTriangle}
+          color="text-[#F59E0B]"
+          border="border-[#F59E0B]/20"
+          bg="bg-[#F59E0B]/10"
+        />
+        <SummaryCard
+          label="Critical Machines"
+          count={statusCount.critical}
+          icon={OctagonAlert}
+          color="text-[#EF4444]"
+          border="border-[#EF4444]/20"
+          bg="bg-[#EF4444]/10"
+        />
       </div>
-
-
-      <div className="space-y-6">
-
-        {visibleLines.map((line) => {
-
-          const lineMachines =
-            getMachinesByLine(line.name);
-
-          const healthyCount =
-            getStatusCount(lineMachines, "healthy");
-
-          const warningCount =
-            getStatusCount(lineMachines, "warning");
-
-          const criticalCount =
-            getStatusCount(lineMachines, "critical");
-
-          return (
-            <div
-              key={line.id}
-              className="overflow-hidden rounded-2xl border border-[#1F2937] bg-[#121620]"
-            >
-
-              <div className="border-b border-[#1F2937] p-5 sm:p-6">
-
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
-                  <div className="flex items-start gap-4">
-
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#A78BFA]">
-                      <Factory size={23} />
-                    </div>
-
-                    <div>
-
-                      <h2 className="text-lg font-bold text-white">
-                        {line.name}
-                      </h2>
-
-                      <p className="mt-1 text-sm text-[#8B95A7]">
-                        {line.type}
-                      </p>
-
-                      <p className="mt-1 text-xs text-[#6B7280]">
-                        {lineMachines.length} machine
-                        {lineMachines.length !== 1 ? "s" : ""}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-
-                    <StatusBadge
-                      icon={CheckCircle2}
-                      label={`${healthyCount} Normal`}
-                      color="text-[#10B981]"
-                      bg="bg-[#10B981]/10"
-                    />
-
-                    <StatusBadge
-                      icon={AlertTriangle}
-                      label={`${warningCount} Warning`}
-                      color="text-[#F59E0B]"
-                      bg="bg-[#F59E0B]/10"
-                    />
-
-                    <StatusBadge
-                      icon={OctagonAlert}
-                      label={`${criticalCount} Critical`}
-                      color="text-[#EF4444]"
-                      bg="bg-[#EF4444]/10"
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-              <div className="p-5 sm:p-6">
-
-                {lineMachines.length === 0 ? (
-
-                  <div className="rounded-xl border border-dashed border-[#374151] bg-[#0B0E14] p-8 text-center">
-
-                    <Factory
-                      size={28}
-                      className="mx-auto text-[#4B5563]"
-                    />
-
-                    <p className="mt-3 text-sm text-[#8B95A7]">
-                      Belum ada mesin yang terdaftar pada line ini.
-                    </p>
-
-                  </div>
-
-                ) : (
-
-                  <div className="overflow-x-auto pb-2 scrollbar-hide">
-
-                    <div className="flex min-w-max items-center gap-3">
-
-                      {lineMachines.map(
-                        (machine, index) => {
-
-                          const config =
-                            statusConfig[
-                              machine.status
-                            ] ||
-                            statusConfig.healthy;
-
-                          const StatusIcon =
-                            config.icon;
-
-                          return (
-                            <React.Fragment
-                              key={machine.id}
-                            >
-                              <div
-                                className={`w-[210px] shrink-0 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/5 ${config.border} ${config.softBg}`}
-                              >
-
-                                <div className="mb-4 flex items-center justify-between">
-
-                                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1F2937] text-[#9CA3AF]">
-                                    <Settings size={19} />
-                                  </div>
-
-                                  <StatusIcon
-                                    size={18}
-                                    className={config.color}
-                                  />
-
-                                </div>
-
-
-                                <div className="truncate font-bold text-white">
-                                  {machine.name}
-                                </div>
-
-
-                                <div className="mt-1 truncate text-xs text-[#8B95A7]">
-                                  {machine.type || "Machine"}
-                                </div>
-
-                                <div
-                                  className={`mt-3 inline-flex items-center gap-1.5 text-xs font-semibold ${config.color}`}
-                                >
-
-                                  <span
-                                    className={`h-1.5 w-1.5 rounded-full ${config.bg}`}
-                                  />
-
-                                  {config.label}
-
-                                </div>
-
-                                {machine.health !== undefined && (
-
-                                  <div className="mt-4">
-
-                                    <div className="mb-1 flex justify-between text-[11px]">
-
-                                      <span className="text-[#8B95A7]">
-                                        Health
-                                      </span>
-
-                                      <span
-                                        className={config.color}
-                                      >
-                                        {machine.health}%
-                                      </span>
-
-                                    </div>
-
-
-                                    <div className="h-1.5 rounded-full bg-[#1F2937]">
-
-                                      <div
-                                        className={`h-1.5 rounded-full ${config.bg}`}
-                                        style={{
-                                          width: `${machine.health}%`,
-                                        }}
-                                      />
-
-                                    </div>
-
-                                  </div>
-
-                                )}
-
-                              </div>
-
-
-                              {index <
-                                lineMachines.length - 1 && (
-
-                                <ArrowRight
-                                  size={20}
-                                  className="shrink-0 text-[#374151]"
-                                />
-
-                              )}
-
-                            </React.Fragment>
-                          );
-                        }
-                      )}
-
-                    </div>
-
-                  </div>
-
-                )}
-
-                <div className="mt-5 flex justify-end border-t border-[#1F2937] pt-5">
-
-                  <button
-                    onClick={() =>
-                      navigate(
-                        "/operator/machine-status"
-                      )
-                    }
-                    className="flex items-center gap-2 rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-2.5 text-sm font-medium text-[#9CA3AF] transition hover:border-[#7C3AED] hover:bg-[#7C3AED]/10 hover:text-white"
-                  >
-
-                    Lihat Semua Mesin
-
-                    <ArrowRight size={16} />
-
-                  </button>
-
-                </div>
-
-              </div>
-
+      <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 pr-2">
+              <Filter size={18} className="text-[#A78BFA]" />
+              <span className="text-sm font-semibold text-white">Filter:</span>
             </div>
-          );
-        })}
+            <FilterButton
+              active={statusFilter === "all"}
+              onClick={() => setStatusFilter("all")}
+              label="All"
+              count={statusCount.all}
+            />
+            <FilterButton
+              active={statusFilter === "healthy"}
+              onClick={() => setStatusFilter("healthy")}
+              label="Normal"
+              count={statusCount.healthy}
+              color="green"
+            />
+            <FilterButton
+              active={statusFilter === "warning"}
+              onClick={() => setStatusFilter("warning")}
+              label="Warning"
+              count={statusCount.warning}
+              color="yellow"
+            />
+            <FilterButton
+              active={statusFilter === "critical"}
+              onClick={() => setStatusFilter("critical")}
+              label="Critical"
+              count={statusCount.critical}
+              color="red"
+            />
+          </div>
 
+          <div className="relative w-full lg:w-72">
+            <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+            <input
+              type="text"
+              placeholder="Cari nama atau tipe mesin..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-[#6B7280] focus:border-[#7C3AED]"
+            />
+          </div>
+        </div>
       </div>
 
+      <div className="space-y-8">
+        {visibleLines.length > 0 ? (
+          visibleLines.map((line) => {
+            const lineMachines = filteredMachines.filter((m) => m.line === line.id);
 
+            return (
+              <div key={line.id} className="space-y-4">
+                {/* Line Header */}
+                <div className="flex items-center gap-4 border-b border-[#1F2937] pb-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#A78BFA]">
+                    <Factory size={23} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">{line.name}</h2>
+                    <p className="text-sm text-[#8B95A7]">
+                      {line.type} • {lineMachines.length} Mesin
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                  {lineMachines.map((machine) => (
+                    <MachineDetailCard key={machine.id} machine={machine} />
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-12 text-center mt-6">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1F2937]">
+              <Search size={24} className="text-[#6B7280]" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Mesin tidak ditemukan</h3>
+            <p className="mt-2 text-sm text-[#8B95A7]">
+              Tidak ada mesin yang sesuai dengan filter atau pencarian di area ini.
+            </p>
+            <button
+              onClick={() => {
+                setStatusFilter("all");
+                setSearchQuery("");
+                setSelectedLine("all");
+              }}
+              className="mt-5 rounded-xl bg-[#7C3AED] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
+            >
+              Reset Semua Filter
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SummaryCard({ label, count, icon: Icon, color, border, bg }) {
+  return (
+    <div className={`rounded-2xl border bg-[#121620] p-5 ${border} flex items-center justify-between`}>
       <div>
-
-        <div className="mb-4">
-
-          <h2 className="text-lg font-bold text-white">
-            Overall Machine Status
-          </h2>
-
-          <p className="mt-1 text-sm text-[#8B95A7]">
-            Ringkasan kondisi mesin dari seluruh production line.
-          </p>
-
-        </div>
-
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-          <SummaryCard
-            label="Healthy Machines"
-            count={
-              machines.filter(
-                (machine) =>
-                  machine.status === "healthy"
-              ).length
-            }
-            icon={CheckCircle2}
-            color="text-[#10B981]"
-            border="border-[#10B981]/20"
-            bg="bg-[#10B981]/10"
-          />
-
-
-          <SummaryCard
-            label="Warning Machines"
-            count={
-              machines.filter(
-                (machine) =>
-                  machine.status === "warning"
-              ).length
-            }
-            icon={AlertTriangle}
-            color="text-[#F59E0B]"
-            border="border-[#F59E0B]/20"
-            bg="bg-[#F59E0B]/10"
-          />
-
-
-          <SummaryCard
-            label="Critical Machines"
-            count={
-              machines.filter(
-                (machine) =>
-                  machine.status === "critical"
-              ).length
-            }
-            icon={OctagonAlert}
-            color="text-[#EF4444]"
-            border="border-[#EF4444]/20"
-            bg="bg-[#EF4444]/10"
-          />
-
-        </div>
-
+        <div className="text-sm text-[#8B95A7]">{label}</div>
+        <div className={`mt-2 text-3xl font-bold ${color}`}>{count}</div>
       </div>
-
+      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bg}`}>
+        <Icon size={24} className={color} />
+      </div>
     </div>
   );
 }
 
+function FilterButton({ active, onClick, label, count, color }) {
+  const colorConfig = {
+    green: "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/30",
+    yellow: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30",
+    red: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30",
+    default: "bg-[#7C3AED]/10 text-[#A78BFA] border-[#7C3AED]/30",
+  };
 
-function StatusBadge({
-  icon: Icon,
-  label,
-  color,
-  bg,
-}) {
+  const activeStyle = color ? colorConfig[color] : colorConfig.default;
+
   return (
-    <div
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${color} ${bg}`}
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+        active
+          ? activeStyle
+          : "border-[#374151] bg-[#0B0E14] text-[#9CA3AF] hover:border-[#4B5563] hover:text-white"
+      }`}
     >
-      <Icon size={14} />
       {label}
+      <span className={`rounded-full px-2 py-0.5 text-xs ${active ? "bg-white/10" : "bg-[#1F2937]"}`}>
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function MachineDetailCard({ machine }) {
+  const config = STATUS_CONFIG[machine.status] || STATUS_CONFIG.healthy;
+  const StatusIcon = config.icon;
+
+  return (
+    <div className={`rounded-2xl border bg-[#121620] p-6 transition hover:bg-[#151A24] ${config.border}`}>
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1F2937] text-[#9CA3AF]">
+            <Settings size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">{machine.name}</h2>
+            <p className="mt-1 text-sm text-[#8B95A7]">{machine.type}</p>
+          </div>
+        </div>
+        <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${config.bg} ${config.color}`}>
+          <StatusIcon size={15} />
+          {config.label}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
+        <Parameter icon={Thermometer} label="Temp" value={machine.temperature ? `${machine.temperature}°C` : "-"} />
+        <Parameter icon={Gauge} label="RPM" value={machine.rpm ? `${machine.rpm}` : "-"} />
+        <Parameter icon={Zap} label="Current" value={machine.current ? `${machine.current} A` : "-"} />
+        <Parameter icon={Activity} label="Vibration" value={machine.vibration ? `${machine.vibration} mm/s` : "-"} />
+      </div>
+
+      {machine.health !== undefined && (
+        <div className="mt-6 rounded-xl bg-[#0B0E14] p-4">
+          <div className="mb-2 flex justify-between text-sm">
+            <span className="text-[#8B95A7]">Machine Health Indicator</span>
+            <span className={`font-bold ${config.color}`}>{machine.health}%</span>
+          </div>
+          <div className="h-2.5 w-full rounded-full bg-[#1F2937] overflow-hidden">
+            <div
+              className={`h-full rounded-full ${
+                machine.status === "critical"
+                  ? "bg-[#EF4444]"
+                  : machine.status === "warning"
+                  ? "bg-[#F59E0B]"
+                  : "bg-[#10B981]"
+              }`}
+              style={{ width: `${machine.health}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-
-function SummaryCard({
-  label,
-  count,
-  icon: Icon,
-  color,
-  border,
-  bg,
-}) {
+function Parameter({ icon: Icon, label, value }) {
   return (
-    <div
-      className={`rounded-2xl border bg-[#121620] p-5 ${border}`}
-    >
-
-      <div className="flex items-center justify-between">
-
-        <div>
-
-          <div className="text-sm text-[#8B95A7]">
-            {label}
-          </div>
-
-          <div
-            className={`mt-2 text-3xl font-bold ${color}`}
-          >
-            {count}
-          </div>
-
-        </div>
-
-
-        <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${bg}`}
-        >
-
-          <Icon
-            size={21}
-            className={color}
-          />
-
-        </div>
-
+    <div className="rounded-xl border border-[#1F2937] bg-[#0B0E14] p-3 flex flex-col justify-center">
+      <div className="flex items-center gap-1.5 text-[#8B95A7]">
+        <Icon size={14} />
+        <span className="text-xs">{label}</span>
       </div>
-
+      <div className="mt-1.5 text-base font-bold text-white truncate">{value}</div>
     </div>
   );
 }

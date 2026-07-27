@@ -34,25 +34,11 @@ const menuSections = {
         icon: Network,
       },
       {
-        name: "Machine Status",
-        path: "/operator/machine-status",
-        icon: MonitorCheck,
-      },
-      {
         name: "AI Analysis",
-        path: "/operator/ai-analysis",
+        path: "/operator/machine-diagnostic",
         icon: BrainCircuit,
       },
-      {
-        name: "Recommendation",
-        path: "/operator/recommendation",
-        icon: Sparkles,
-      },
-      {
-        name: "Engineer Validation",
-        path: "/operator/validation",
-        icon: ShieldCheck,
-      },
+     
     ],
   },
 
@@ -70,11 +56,6 @@ const menuSections = {
         path: "/admin/knowledge-ai",
       },
       {
-        name: "Upload Data",
-        icon: Upload,
-        path: "/admin/upload-data",
-      },
-      {
         name: "Manajemen Mesin",
         icon: Factory,
         path: "/admin/machines",
@@ -83,11 +64,6 @@ const menuSections = {
         name: "Pengguna",
         icon: Users,
         path: "/admin/users",
-      },
-      {
-        name: "Pengaturan",
-        icon: Settings,
-        path: "/admin/settings",
       },
     ],
   },
@@ -145,7 +121,7 @@ export default function Sidebar({ role = "operator" }) {
                   <NavLink
                     key={menu.name}
                     to={menu.path}
-                    end={menu.path === "/" || menu.path === "/operator"}
+                    end={menu.path === "/" || menu.path === "/admin" || menu.path === "/operator"}
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-xl px-3 py-3 transition-all ${isActive
                         ? "bg-[#1E1B33] text-[#A78BFA]"
