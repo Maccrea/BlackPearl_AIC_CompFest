@@ -7,9 +7,17 @@ import json
 from dotenv import load_dotenv
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from supabase import create_client, Client
+import shutil
+import pandas as pd
+import io
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="Tanya SEPUH API")
 
@@ -25,21 +33,54 @@ class SymptomInput(BaseModel):
     symptoms: str
     machine_type: str = "General"
 
-try:
-    with open("cases.json", "r") as f:
-        historical_cases = json.load(f)
-except FileNotFoundError:
-    historical_cases = []
+class ValidationInput(BaseModel):
+    symptoms: str
+    root_cause: str
+    recommendations: list
 
-vectorizer = TfidfVectorizer()
-tfidf_matrix = None
+class ManualKnowledgeInput(BaseModel):
+    title: str
+    category: str
+    machine_type: str
+    root_cause: str
+    symptoms: list
+    solutions: list
+    tags: str
 
-if historical_cases:
-    case_symptoms = [case["symptoms"] for case in historical_cases]
-    tfidf_matrix = vectorizer.fit_transform(case_symptoms)
+class MachineInput(BaseModel):
+    id: str
+    name: str
+    type: str
+    line: str
+    status: str
+    temp: str
+    health: int
+
+class UserInput(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str
+    status: str
+def get_knowledge_base():
+    try:
+        response = supabase.table("knowledge_cases").select("*").execute()
+        cases = response.data
+        if not cases:
+            return [], None, None
+            
+        vectorizer = TfidfVectorizer()
+        case_symptoms = [c["symptoms"] for c in cases]
+        tfidf_matrix = vectorizer.fit_transform(case_symptoms)
+        return cases, vectorizer, tfidf_matrix
+    except Exception as e:
+        print(f"Error fetching from Supabase: {e}")
+        return [], None, None
 
 @app.post("/analyze")
 def analyze_symptoms(data: SymptomInput):
+    historical_cases, vectorizer, tfidf_matrix = get_knowledge_base()
+    
     best_score = 0
     best_match = None
     
@@ -56,9 +97,9 @@ def analyze_symptoms(data: SymptomInput):
     if best_score >= THRESHOLD:
         return {
             "status_case": "Similar Case Found (Database)",
-            "possible_root_cause": best_match["root_cause"],
-            "confidence": best_match["confidence"],
-            "recommendations": [best_match["solution"], "Cek riwayat maintenance mesin ini"]
+            "possible_root_cause": best_match.get("root_cause", ""),
+            "confidence": best_match.get("confidence", 100),
+            "recommendations": [best_match.get("solution", ""), "Cek riwayat maintenance mesin ini"]
         }
     else:
         prompt = f"""
@@ -84,43 +125,33 @@ def analyze_symptoms(data: SymptomInput):
         except Exception as e:
             return {"error": str(e)}
 
-class ValidationInput(BaseModel):
-    symptoms: str
-    root_cause: str
-    recommendations: list
-
 @app.post("/validate")
 def validate_new_case(data: ValidationInput):
-    global historical_cases, tfidf_matrix, vectorizer
-    
     try:
-        with open("cases.json", "r") as f:
-            cases = json.load(f)
-    except:
-        cases = []
+        new_case = {
+            "title": f"New Case: {data.machine_type}" if hasattr(data, 'machine_type') else "New Identified Issue",
+            "category": "General Troubleshooting",
+            "status": "Active",
+            "symptoms": data.symptoms,
+            "root_cause": data.root_cause,
+            "solution": " ".join(data.recommendations),
+            "confidence": 100
+        }
         
-    new_id = f"C{(len(cases) + 1):03d}"
-    new_case = {
-        "id": new_id,
-        "symptoms": data.symptoms,
-        "root_cause": data.root_cause,
-        "solution": " ".join(data.recommendations),
-        "confidence": 100
-    }
-    
-    cases.append(new_case)
-    with open("cases.json", "w") as f:
-        json.dump(cases, f, indent=4)
-        
-    historical_cases = cases
-    case_symptoms = [c["symptoms"] for c in historical_cases]
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(case_symptoms)
-    
-    return {"message": "Knowledge Graph berhasil di-update! Sistem telah mempelajari kasus ini."}
+        supabase.table("knowledge_cases").insert(new_case).execute()
+        return {"message": "Knowledge Graph berhasil di-update ke Supabase! Sistem telah mempelajari kasus ini."}
+    except Exception as e:
+        return {"error": f"Gagal menyimpan ke database: {str(e)}"}
 
 @app.get("/api/dashboard")
 def get_dashboard():
+    db_status = "Disconnected"
+    try:
+        supabase.table("knowledge_cases").select("id").limit(1).execute()
+        db_status = "Connected"
+    except Exception:
+        db_status = "Error/Disconnected"
+
     return {
         "stats": {
             "normal": 3,
@@ -135,42 +166,234 @@ def get_dashboard():
         "system_status": {
             "api": "Online",
             "ai_engine": "Running",
-            "database": "Connected"
+            "database": db_status
         }
     }
 
 @app.get("/api/knowledge")
 def get_knowledge_list():
-    return [
-        {"id": 1, "knowledge": "Motor Overheating", "category": "Motor & Cooling System", "created": "20 Jul 2026", "confidence": 94, "status": "Active"},
-        {"id": 2, "knowledge": "Excessive Machine Vibration", "category": "Machine Vibration", "created": "18 Jul 2026", "confidence": 91, "status": "Active"}
-    ]
+    try:
+        response = supabase.table("knowledge_cases").select("id, title, category, created_at, confidence, status").execute()
+        
+        formatted_data = []
+        for item in response.data:
+            item["created"] = item.pop("created_at", "N/A")[:10]
+            formatted_data.append(item)
+            
+        return formatted_data
+    except Exception as e:
+        print(f"Error fetching knowledge list: {e}")
+        return []
+
+@app.get("/api/knowledge/{knowledge_id}")
+def get_knowledge_detail(knowledge_id: str):
+    try:
+        response = supabase.table("knowledge_cases").select("*").eq("id", knowledge_id).execute()
+        if response.data:
+            data = response.data[0]
+            data["prediction"] = data.get("title", "")
+            data["created"] = data.pop("created_at", "N/A")[:10]
+            
+            if isinstance(data.get("symptoms"), str):
+                data["symptoms"] = [data["symptoms"]]
+            if isinstance(data.get("solution"), str):
+                data["recommendation"] = [data["solution"]]
+                
+            return data
+        return {"error": "Knowledge not found"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/api/upload")
-def upload_dataset(file: UploadFile = File(...)):
-    return {"filename": file.filename, "message": "File berhasil diunggah dan sedang diproses oleh AI."}
+async def upload_dataset(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        filename = file.filename.lower()
+        
+        if filename.endswith(".csv"):
+            df = pd.read_csv(io.BytesIO(contents))
+        elif filename.endswith((".xls", ".xlsx")):
+            df = pd.read_excel(io.BytesIO(contents))
+        elif filename.endswith(".json"):
+            df = pd.read_json(io.BytesIO(contents))
+        else:
+            return {"error": "Format file tidak didukung"}
+
+        # Ambil sampel lebih banyak (misal 10 baris)
+        data_sample = df.head(10).to_json(orient="records")
+
+        # Minta Groq membalas dengan format Array of Objects di dalam key "cases"
+        prompt = f"""
+        Anda adalah AI Engineer Assistant. Ekstrak data mentah berikut menjadi BEBERAPA kasus masalah mesin industri.
+        Data: {data_sample}
+        
+        Keluarkan HANYA hasil dalam format JSON persis seperti ini:
+        {{
+            "cases": [
+                {{
+                    "title": "Nama Spesifik Masalah 1",
+                    "category": "General Troubleshooting",
+                    "symptoms": "Gejala 1",
+                    "root_cause": "Akar masalah utama 1",
+                    "solution": "Saran perbaikan 1",
+                    "confidence": 90,
+                    "status": "Active"
+                }},
+                {{
+                    "title": "Nama Spesifik Masalah 2",
+                    "category": "General Troubleshooting",
+                    "symptoms": "Gejala 2",
+                    "root_cause": "Akar masalah utama 2",
+                    "solution": "Saran perbaikan 2",
+                    "confidence": 85,
+                    "status": "Active"
+                }}
+            ]
+        }}
+        """
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.2,
+            response_format={"type": "json_object"}
+        )
+        
+        extracted_data = json.loads(chat_completion.choices[0].message.content)
+        cases_to_insert = extracted_data.get("cases", [])
+        
+        if cases_to_insert:
+            supabase.table("knowledge_cases").insert(cases_to_insert).execute()
+            return {"filename": file.filename, "message": f"{len(cases_to_insert)} kasus berhasil diekstrak AI dan disimpan!"}
+        else:
+            return {"error": "AI gagal mengekstrak data menjadi kasus."}
+            
+    except Exception as e:
+        return {"error": f"Gagal memproses file: {str(e)}"}
 
 @app.post("/api/knowledge/upload-interview")
-def upload_interview(title: str = Form(...), file: UploadFile = File(...)):
-    return {
-        "filename": file.filename,
-        "title": title,
-        "message": "Interview berhasil diunggah dan sedang diproses oleh pipeline Speech-to-Text."
-    }
+async def upload_interview(title: str = Form(...), file: UploadFile = File(...)):
+    try:
+        temp_file_path = f"temp_{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        with open(temp_file_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+              file=(temp_file_path, audio_file.read()),
+              model="whisper-large-v3"
+            )
+        
+        transcript_text = transcription.text
+        os.remove(temp_file_path)
 
+        prompt = f"""
+        Anda adalah AI Engineer Assistant. Ekstrak transkrip wawancara berikut menjadi BEBERAPA kasus SOP diagnosis mesin (pisahkan jika ada lebih dari satu masalah yang dibahas).
+        Transkrip: "{transcript_text}"
+        
+        Keluarkan HANYA hasil dalam format JSON persis seperti ini:
+        {{
+            "cases": [
+                {{
+                    "title": "{title} - [Nama Masalah 1]",
+                    "category": "Interview Extraction",
+                    "symptoms": "Gejala yang disebutkan",
+                    "root_cause": "Akar masalah yang dibahas",
+                    "solution": "Tindakan yang disarankan teknisi",
+                    "confidence": 95,
+                    "status": "Active"
+                }},
+                {{
+                    "title": "{title} - [Nama Masalah 2]",
+                    "category": "Interview Extraction",
+                    "symptoms": "Gejala 2",
+                    "root_cause": "Akar masalah 2",
+                    "solution": "Tindakan perbaikan 2",
+                    "confidence": 90,
+                    "status": "Active"
+                }}
+            ]
+        }}
+        """
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.1,
+            response_format={"type": "json_object"}
+        )
+        
+        extracted_data = json.loads(chat_completion.choices[0].message.content)
+        cases_to_insert = extracted_data.get("cases", [])
+        
+        if cases_to_insert:
+            supabase.table("knowledge_cases").insert(cases_to_insert).execute()
+            return {
+                "filename": file.filename,
+                "title": title,
+                "message": f"{len(cases_to_insert)} masalah terdeteksi dari interview dan berhasil masuk Knowledge Base!"
+            }
+        else:
+            return {"error": "AI gagal mengekstrak kasus dari interview."}
+            
+    except Exception as e:
+        return {"error": f"Gagal memproses interview: {str(e)}"}
+
+
+@app.post("/api/knowledge/manual")
+def upload_manual_knowledge(data: ManualKnowledgeInput):
+    try:
+        symptoms_text = " | ".join(data.symptoms)
+        solutions_text = " | ".join(data.solutions)
+        
+        new_case = {
+            "title": data.title,
+            "category": data.category,
+            "status": "Active",
+            "symptoms": symptoms_text,
+            "root_cause": data.root_cause,
+            "solution": solutions_text,
+            "confidence": 100
+        }
+        
+        supabase.table("knowledge_cases").insert(new_case).execute()
+        return {"message": "Knowledge manual berhasil disimpan!"}
+    except Exception as e:
+        return {"error": f"Gagal menyimpan ke database: {str(e)}"}
 @app.get("/api/machines")
 def get_machines():
-    return [
-        {"id": "M1", "name": "Machine A", "type": "Conveyor", "line": "Production Line A", "status": "Healthy", "temp": "45°C", "health": 98},
-        {"id": "M2", "name": "Machine B", "type": "Packaging", "line": "Production Line A", "status": "Healthy", "temp": "47°C", "health": 96},
-        {"id": "M3", "name": "Machine C", "type": "Filling", "line": "Production Line B", "status": "Warning", "temp": "69°C", "health": 74},
-        {"id": "M4", "name": "Machine D", "type": "Sealing", "line": "Production Line B", "status": "Healthy", "temp": "43°C", "health": 99},
-        {"id": "M5", "name": "Machine E", "type": "Labeling", "line": "Production Line C", "status": "Critical", "temp": "92°C", "health": 21}
-    ]
+    res = supabase.table("machines").select("*").execute()
+    return res.data
+
+@app.post("/api/machines")
+def add_machine(data: MachineInput):
+    supabase.table("machines").insert(data.dict()).execute()
+    return {"message": "Mesin berhasil ditambahkan"}
+
+@app.put("/api/machines/{machine_id}")
+def update_machine(machine_id: str, data: MachineInput):
+    supabase.table("machines").update(data.dict()).eq("id", machine_id).execute()
+    return {"message": "Data mesin diupdate"}
+
+@app.delete("/api/machines/{machine_id}")
+def delete_machine(machine_id: str):
+    supabase.table("machines").delete().eq("id", machine_id).execute()
+    return {"message": "Mesin dihapus"}
 
 @app.get("/api/users")
 def get_users():
-    return [
-        {"id": 1, "name": "Administrator", "email": "admin@legacymind.ai", "role": "Admin", "status": "Active"},
-        {"id": 2, "name": "Operator 1", "email": "operator@legacymind.ai", "role": "Operator", "status": "Active"}
-    ]
+    res = supabase.table("app_users").select("*").execute()
+    return res.data
+
+@app.post("/api/users")
+def add_user(data: UserInput):
+    supabase.table("app_users").insert(data.dict()).execute()
+    return {"message": "User berhasil ditambahkan"}
+
+@app.put("/api/users/{user_id}")
+def update_user(user_id: str, data: UserInput):
+    supabase.table("app_users").update(data.dict()).eq("id", user_id).execute()
+    return {"message": "Data user diupdate"}
+
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: str):
+    supabase.table("app_users").delete().eq("id", user_id).execute()
+    return {"message": "User dihapus"}

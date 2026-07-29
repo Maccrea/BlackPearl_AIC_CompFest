@@ -1,0 +1,32 @@
+:root{
+    --background: #0B0E14;
+    --sidebar: #0B0E14; 
+    --card: #121620; 
+    --border: #1F2937;
+    --text:#F8FAFC;
+    --secondary:#9CA3AF;
+    --primary:#3B82F6;
+    --success:#10B981;
+    --warning:#F59E0B;
+    --danger:#EF4444;
+    --ai:#7C3AED;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    height:100vh;
+    background:var(--background);
+}
+
+.content{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.main{
+    flex:1;
+    overflow:auto;
+    padding:30px;
+}
