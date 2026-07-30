@@ -78,7 +78,6 @@ export default function Help() {
   return (
     <div className="min-h-full w-full bg-[#0B0E14]">
       <div className="mx-auto w-full max-w-[1440px] px-6 py-8 sm:px-8 lg:px-10 xl:px-12">
-
         <div className="mb-8 flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10">
             <MessageCircleQuestion
@@ -144,7 +143,7 @@ export default function Help() {
                     </span>
                   </div>
 
-=                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-white">
                     {guide.title}
                   </h3>
 
@@ -157,7 +156,7 @@ export default function Help() {
           </div>
         </section>
 
-=        <section className="mb-12">
+        <section className="mb-12">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-white">
               Frequently Asked Questions
@@ -186,10 +185,9 @@ export default function Help() {
           </div>
         </section>
 
-=        <section>
+        <section>
           <div className="rounded-2xl border border-[#7C3AED]/20 bg-gradient-to-r from-[#7C3AED]/10 to-[#121620] p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              
               <div>
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10">
@@ -222,11 +220,9 @@ export default function Help() {
                   Contact Engineer
                 </button>
               </div>
-
             </div>
           </div>
         </section>
-
       </div>
     </div>
   );

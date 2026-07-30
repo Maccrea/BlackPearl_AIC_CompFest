@@ -53,10 +53,6 @@ export const router = createBrowserRouter([
         element: <KnowledgeAI />,
       },
       {
-        path: "knowledge-ai/upload-doc",
-        element: <UploadDoc />,
-      },
-      {
         path: "machines",
         element: <MachineManagement />,
       },
@@ -68,6 +64,10 @@ export const router = createBrowserRouter([
       //   path: "settings",
       //   element: <Settings />,
       // },
+      {
+        path: "knowledge-ai/upload-doc",
+        element: <UploadDoc />,
+      },
       {
         path: "knowledge-ai/upload-interview",
         element: <UploadInterview />,

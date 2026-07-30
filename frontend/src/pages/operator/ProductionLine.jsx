@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Settings,
   CheckCircle2,
@@ -13,7 +13,6 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-import dashboard from "../../mock/dashboard";
 
 const STATUS_CONFIG = {
   healthy: {
@@ -39,23 +38,37 @@ const STATUS_CONFIG = {
   },
 };
 
-const PRODUCTION_LINES = [
-  { id: "Production Line A", name: "Production Line A", type: "Packaging" },
-  { id: "Production Line B", name: "Production Line B", type: "Filling & Sealing" },
-  { id: "Production Line C", name: "Production Line C", type: "Labeling" },
-];
-
 export default function ProductionDashboard() {
-  const machines = dashboard.machines || [];
-
+  const [machines, setMachines] = useState([]);
   const [selectedLine, setSelectedLine] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    fetch("http://localhost:8000/api/machines")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setMachines(data);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const PRODUCTION_LINES = useMemo(() => {
+    const linesMap = new Map();
+    machines.forEach((m) => {
+      if (m.line && !linesMap.has(m.line)) {
+        linesMap.set(m.line, { id: m.line, name: m.line, type: "Production Line" });
+      }
+    });
+    return Array.from(linesMap.values());
+  }, [machines]);
+
   const filteredMachines = useMemo(() => {
     return machines.filter((machine) => {
       const matchLine = selectedLine === "all" || machine.line === selectedLine;
-      const matchStatus = statusFilter === "all" || machine.status === statusFilter;
+      const matchStatus = statusFilter === "all" || machine.status?.toLowerCase() === statusFilter;
       const matchSearch =
         machine.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.type?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -72,9 +85,9 @@ export default function ProductionDashboard() {
 
   const statusCount = {
     all: baseMachinesForCount.length,
-    healthy: baseMachinesForCount.filter((m) => m.status === "healthy").length,
-    warning: baseMachinesForCount.filter((m) => m.status === "warning").length,
-    critical: baseMachinesForCount.filter((m) => m.status === "critical").length,
+    healthy: baseMachinesForCount.filter((m) => m.status?.toLowerCase() === "healthy").length,
+    warning: baseMachinesForCount.filter((m) => m.status?.toLowerCase() === "warning").length,
+    critical: baseMachinesForCount.filter((m) => m.status?.toLowerCase() === "critical").length,
   };
 
   const visibleLines = useMemo(() => {
@@ -85,7 +98,7 @@ export default function ProductionDashboard() {
     return lines.filter(line => 
       filteredMachines.some(m => m.line === line.id)
     );
-  }, [selectedLine, filteredMachines]);
+  }, [selectedLine, filteredMachines, PRODUCTION_LINES]);
 
   return (
     <div className="space-y-6 pb-10">
@@ -93,7 +106,7 @@ export default function ProductionDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-white">Production Dashboard</h1>
           <p className="mt-1 text-[#9CA3AF]">
-            Monitor kondisi, parameter, dan alur seluruh production line terpadu.
+            Monitor the condition, parameters, and flow of all integrated production lines.
           </p>
         </div>
 
@@ -141,6 +154,7 @@ export default function ProductionDashboard() {
           bg="bg-[#EF4444]/10"
         />
       </div>
+      
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-3">
@@ -181,7 +195,7 @@ export default function ProductionDashboard() {
             <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="text"
-              placeholder="Cari nama atau tipe mesin..."
+              placeholder="Search machine name or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-[#6B7280] focus:border-[#7C3AED]"
@@ -197,7 +211,6 @@ export default function ProductionDashboard() {
 
             return (
               <div key={line.id} className="space-y-4">
-                {/* Line Header */}
                 <div className="flex items-center gap-4 border-b border-[#1F2937] pb-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#A78BFA]">
                     <Factory size={23} />
@@ -205,7 +218,7 @@ export default function ProductionDashboard() {
                   <div>
                     <h2 className="text-xl font-bold text-white">{line.name}</h2>
                     <p className="text-sm text-[#8B95A7]">
-                      {line.type} • {lineMachines.length} Mesin
+                      {line.type} • {lineMachines.length} Machines
                     </p>
                   </div>
                 </div>
@@ -223,9 +236,9 @@ export default function ProductionDashboard() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1F2937]">
               <Search size={24} className="text-[#6B7280]" />
             </div>
-            <h3 className="text-lg font-bold text-white">Mesin tidak ditemukan</h3>
+            <h3 className="text-lg font-bold text-white">No machines found</h3>
             <p className="mt-2 text-sm text-[#8B95A7]">
-              Tidak ada mesin yang sesuai dengan filter atau pencarian di area ini.
+              No machines match the current filter or search in this area.
             </p>
             <button
               onClick={() => {
@@ -235,7 +248,7 @@ export default function ProductionDashboard() {
               }}
               className="mt-5 rounded-xl bg-[#7C3AED] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
             >
-              Reset Semua Filter
+              Reset All Filters
             </button>
           </div>
         )}
@@ -286,7 +299,7 @@ function FilterButton({ active, onClick, label, count, color }) {
 }
 
 function MachineDetailCard({ machine }) {
-  const config = STATUS_CONFIG[machine.status] || STATUS_CONFIG.healthy;
+  const config = STATUS_CONFIG[machine.status?.toLowerCase()] || STATUS_CONFIG.healthy;
   const StatusIcon = config.icon;
 
   return (
@@ -308,8 +321,8 @@ function MachineDetailCard({ machine }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
-        <Parameter icon={Thermometer} label="Temp" value={machine.temperature ? `${machine.temperature}°C` : "-"} />
-        <Parameter icon={Gauge} label="RPM" value={machine.rpm ? `${machine.rpm}` : "-"} />
+        <Parameter icon={Thermometer} label="Temp" value={machine.temp || "-"} />
+        <Parameter icon={Gauge} label="RPM" value={machine.rpm || "-"} />
         <Parameter icon={Zap} label="Current" value={machine.current ? `${machine.current} A` : "-"} />
         <Parameter icon={Activity} label="Vibration" value={machine.vibration ? `${machine.vibration} mm/s` : "-"} />
       </div>
@@ -323,9 +336,9 @@ function MachineDetailCard({ machine }) {
           <div className="h-2.5 w-full rounded-full bg-[#1F2937] overflow-hidden">
             <div
               className={`h-full rounded-full ${
-                machine.status === "critical"
+                machine.status?.toLowerCase() === "critical"
                   ? "bg-[#EF4444]"
-                  : machine.status === "warning"
+                  : machine.status?.toLowerCase() === "warning"
                   ? "bg-[#F59E0B]"
                   : "bg-[#10B981]"
               }`}

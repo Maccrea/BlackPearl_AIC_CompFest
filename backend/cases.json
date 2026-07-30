@@ -1,0 +1,30 @@
+[
+    {
+        "id": "C001",
+        "symptoms": "Mesin CNC bergetar hebat saat RPM di atas 2000, terdengar suara gesekan kasar dari area spindle, suhu bearing naik cepat.",
+        "root_cause": "Keausan parah pada bearing spindle utama akibat kurang pelumasan",
+        "solution": "Ganti bearing spindle dan kalibrasi ulang sistem pelumasan otomatis",
+        "confidence": 95
+    },
+    {
+        "id": "C002",
+        "symptoms": "Tekanan hidrolik drop tiba-tiba di tengah siklus injeksi, ada indikator alarm pressure low, oli terlihat menetes di bawah silinder utama.",
+        "root_cause": "Seal (sil) pada silinder hidrolik utama bocor/pecah",
+        "solution": "Ganti seal hidrolik, periksa kondisi as silinder dari baret, dan isi ulang oli (bleeding)",
+        "confidence": 90
+    },
+    {
+        "id": "C003",
+        "symptoms": "Konveyor utama tiba-tiba berhenti, motor drive terasa sangat panas saat disentuh, bau sangit terbakar dari area panel inverter.",
+        "root_cause": "Overload pada motor akibat beban berlebih atau bearing konveyor macet",
+        "solution": "Bebaskan beban konveyor, periksa jalur mekanik, dan reset thermal overload relay (TOR) di panel",
+        "confidence": 88
+    },
+    {
+        "id": "C004",
+        "symptoms": "Robot lengan (robotic arm) untuk welding tiba-tiba berhenti bergerak di tengah proses pengelasan. Lampu indikator pada motor servo berkedip merah 3 kali, dan layar HMI menampilkan error code E-405 komunikasi terputus.",
+        "root_cause": "Kerusakan pada kabel komunikasi antara motor servo dan kontroler, atau gangguan pada sistem komunikasi industri (Fieldbus/Profibus)",
+        "solution": "Periksa kabel komunikasi dan hubungannya dengan kontroler Cek sistem komunikasi industri untuk memastikan tidak ada gangguan atau kesalahan konfigurasi",
+        "confidence": 100
+    }
+]
