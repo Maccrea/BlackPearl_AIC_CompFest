@@ -13,7 +13,7 @@ export default function UserManagement() {
   });
 
   const fetchUsers = () => {
-    fetch("http://localhost:8000/api/users")
+    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/users")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -53,7 +53,7 @@ export default function UserManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `http://localhost:8000/api/users/${editingUser.id}`;
+    const url = `black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/users/${editingUser.id}`;
     
     const payload = {
       id: editingUser.id,

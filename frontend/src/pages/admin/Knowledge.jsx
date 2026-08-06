@@ -17,7 +17,7 @@ export default function KnowledgeAI() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/knowledge")
+    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge")
       .then((res) => res.json())
       .then((data) => {
         setKnowledgeCases(data);

@@ -71,7 +71,7 @@ export default function UploadInterview() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:8000/api/knowledge/upload-interview", {
+      const response = await fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge/upload-interview", {
         method: "POST",
         body: formData,
       });

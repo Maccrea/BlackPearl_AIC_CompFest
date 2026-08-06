@@ -19,7 +19,7 @@ export default function MachineDiagnosticHub() {
   const [engineerNote, setEngineerNote] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/machines")
+    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines")
       .then((res) => res.json())
       .then((data) => {
         const fetchedMachines = Array.isArray(data) ? data : (data.data || []);

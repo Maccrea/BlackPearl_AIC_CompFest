@@ -12,7 +12,7 @@ function App() {
     setLoading(true)
     
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+      const response = await fetch('black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symptoms: symptoms, machine_type: 'Mesin A' })
