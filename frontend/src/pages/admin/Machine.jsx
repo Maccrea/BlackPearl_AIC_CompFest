@@ -9,8 +9,8 @@ export default function MachineManagement() {
   
   const [formData, setFormData] = useState({
     name: "",
-    type: "",
-    line: "",
+    type: "Conveyor",
+    line: "Production Line A",
   });
 
   const fetchMachines = () => {
@@ -18,13 +18,49 @@ export default function MachineManagement() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setMachines(data);
+          // LOGIKA PINTAR DITAMBAHKAN DI SINI
+          const evaluatedData = data.map((machine) => {
+            const temp = parseFloat(String(machine.temp).replace(/[^0-9.]/g, '')) || 25;
+            const rpm = parseFloat(String(machine.rpm).replace(/[^0-9.]/g, '')) || 1450;
+            const current = parseFloat(String(machine.current).replace(/[^0-9.]/g, '')) || 12.5;
+            const vibration = parseFloat(String(machine.vibration).replace(/[^0-9.]/g, '')) || 2.1;
+
+            let calcHealth = 100;
+            if (temp >= 75) calcHealth -= 35;
+            else if (temp >= 60) calcHealth -= 15;
+
+            if (vibration >= 4.5) calcHealth -= 30;
+            else if (vibration >= 3.0) calcHealth -= 15;
+
+            if (rpm > 1550) calcHealth -= 10;
+            if (current > 15) calcHealth -= 10;
+
+            calcHealth = Math.max(0, calcHealth);
+
+            const dbHealth = parseFloat(machine.health) || 100;
+            const finalHealth = Math.min(calcHealth, dbHealth);
+
+            let realStatus = "Healthy";
+            if (temp >= 75 || finalHealth <= 40 || rpm > 1550 || vibration >= 4.5) {
+              realStatus = "Critical";
+            } else if (temp >= 60 || finalHealth <= 70 || rpm > 1500 || vibration >= 3.0) {
+              realStatus = "Warning";
+            }
+
+            return {
+              ...machine,
+              health: finalHealth,
+              status: realStatus
+            };
+          });
+
+          setMachines(evaluatedData);
         } else {
           setMachines([]);
         }
       })
       .catch((err) => {
-        console.error("Gagal fetch machines:", err);
+        console.error("Failed to fetch machines:", err);
         setMachines([]);
       });
   };
@@ -52,7 +88,7 @@ export default function MachineManagement() {
 
   const handleAdd = () => {
     setEditingMachine(null);
-    setFormData({ name: "", type: "", line: "" });
+    setFormData({ name: "", type: "Conveyor", line: "Production Line A" });
     setIsModalOpen(true);
   };
 
@@ -60,14 +96,14 @@ export default function MachineManagement() {
     setEditingMachine(machine);
     setFormData({
       name: machine.name,
-      type: machine.type,
-      line: machine.line || "",
+      type: machine.type || "Conveyor",
+      line: machine.line || "Production Line A",
     });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id, name) => {
-    const confirmDelete = window.confirm(`Apakah kamu yakin ingin menghapus ${name}?`);
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${name}?`);
     if (!confirmDelete) return;
 
     try {
@@ -87,18 +123,31 @@ export default function MachineManagement() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const isDuplicate = machines.some((m) => {
+      const isSameName = m.name.toLowerCase() === formData.name.toLowerCase();
+      const isSameLine = m.line === formData.line;
+      const isNotSelf = editingMachine ? m.id !== editingMachine.id : true;
+      
+      return isSameName && isSameLine && isNotSelf;
+    });
+
+    if (isDuplicate) {
+      alert(`Mesin dengan nama "${formData.name}" sudah ada di ${formData.line}!`);
+      return;
+    }
+
     const isEdit = editingMachine !== null;
     const url = isEdit 
       ? `http://localhost:8000/api/machines/${editingMachine.id}` 
       : "http://localhost:8000/api/machines";
     
-    // Status di-set otomatis, bukan dari input user
     const payload = {
       id: isEdit ? editingMachine.id : `M${Date.now()}`,
       name: formData.name,
       type: formData.type,
       line: formData.line,
-      status: isEdit ? editingMachine.status : "Healthy", // Mesin baru default Healthy
+      status: isEdit ? editingMachine.status : "Healthy",
       temp: editingMachine?.temp || "25°C",
       health: editingMachine?.health || 100
     };
@@ -121,7 +170,7 @@ export default function MachineManagement() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">Machine Management</h1>
-          <p className="mt-1 text-gray-400">Kelola dan pantau seluruh mesin di line produksi.</p>
+          <p className="mt-1 text-gray-400">Manage and monitor all machines across production lines.</p>
         </div>
         <button
           onClick={handleAdd}
@@ -160,7 +209,7 @@ export default function MachineManagement() {
               {filteredMachines.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="p-10 text-center text-sm text-gray-500">
-                    Tidak ada data mesin.
+                    No machine data available.
                   </td>
                 </tr>
               ) : (
@@ -212,7 +261,7 @@ export default function MachineManagement() {
                   {editingMachine ? "Edit Machine" : "Add New Machine"}
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
-                  {editingMachine ? "Update informasi mesin." : "Tambahkan mesin baru ke production line."}
+                  {editingMachine ? "Update machine information." : "Add a new machine to the production line."}
                 </p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-2 text-gray-400 transition hover:bg-white/5 hover:text-white">
@@ -227,11 +276,36 @@ export default function MachineManagement() {
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">Machine Type</label>
-                <input required type="text" name="type" value={formData.type} onChange={handleChange} className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none focus:border-[#7C3AED]" />
+                <select 
+                  required 
+                  name="type" 
+                  value={formData.type} 
+                  onChange={handleChange} 
+                  className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none focus:border-[#7C3AED]"
+                >
+                  <option value="Conveyor">Conveyor</option>
+                  <option value="Extrusion">Extrusion</option>
+                  <option value="Packaging">Packaging</option>
+                  <option value="Filling">Filling</option>
+                  <option value="Sealing">Sealing</option>
+                  <option value="Labeling">Labeling</option>
+                  <option value="Mixing">Mixing</option>
+                  <option value="Thermoforming">Thermoforming</option>
+                </select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">Production Line</label>
-                <input required type="text" name="line" value={formData.line} onChange={handleChange} className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none focus:border-[#7C3AED]" />
+                <select 
+                  required 
+                  name="line" 
+                  value={formData.line} 
+                  onChange={handleChange} 
+                  className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none focus:border-[#7C3AED]"
+                >
+                  <option value="Production Line A">Production Line A</option>
+                  <option value="Production Line B">Production Line B</option>
+                  <option value="Production Line C">Production Line C</option>
+                </select>
               </div>
               
               <div className="flex justify-end gap-3 pt-4">

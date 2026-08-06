@@ -18,21 +18,15 @@ export default function UploadData() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
 
-  // File yang diperbolehkan
   const allowedExtensions = [".csv", ".xlsx", ".xls", ".json"];
 
-  // Maksimal ukuran file: 10 MB
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-  // ==============================
-  // VALIDATE FILE
-  // ==============================
 
   const validateFile = (file) => {
     if (!file) {
       return {
         valid: false,
-        message: "File tidak ditemukan.",
+        message: "File not found.",
       };
     }
 
@@ -45,14 +39,14 @@ export default function UploadData() {
     if (!isValidExtension) {
       return {
         valid: false,
-        message: "Format file tidak didukung. Gunakan CSV, Excel, atau JSON.",
+        message: "File format not supported. Use CSV, Excel, or JSON.",
       };
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return {
         valid: false,
-        message: "Ukuran file terlalu besar. Maksimal ukuran file adalah 10 MB.",
+        message: "File size is too large. Maximum file size is 10 MB.",
       };
     }
 
@@ -61,10 +55,6 @@ export default function UploadData() {
       message: "File valid.",
     };
   };
-
-  // ==============================
-  // HANDLE SELECT FILE
-  // ==============================
 
   const handleFileSelect = (file) => {
     setUploadStatus(null);
@@ -85,10 +75,6 @@ export default function UploadData() {
     setSelectedFile(file);
   };
 
-  // ==============================
-  // INPUT FILE
-  // ==============================
-
   const handleInputChange = (event) => {
     const file = event.target.files?.[0];
 
@@ -96,10 +82,6 @@ export default function UploadData() {
       handleFileSelect(file);
     }
   };
-
-  // ==============================
-  // DRAG & DROP
-  // ==============================
 
   const handleDragOver = (event) => {
     event.preventDefault();
@@ -123,10 +105,6 @@ export default function UploadData() {
     }
   };
 
-  // ==============================
-  // REMOVE FILE
-  // ==============================
-
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setUploadStatus(null);
@@ -135,10 +113,6 @@ export default function UploadData() {
       fileInputRef.current.value = "";
     }
   };
-
-  // ==============================
-  // FORMAT FILE SIZE
-  // ==============================
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -150,10 +124,6 @@ export default function UploadData() {
       sizes[index]
     }`;
   };
-
-  // ==============================
-  // FILE ICON
-  // ==============================
 
   const getFileIcon = () => {
     if (!selectedFile) {
@@ -176,15 +146,11 @@ export default function UploadData() {
     return <FileText size={28} />;
   };
 
-  // ==============================
-  // UPLOAD DATA
-  // ==============================
-
   const handleUpload = async () => {
     if (!selectedFile) {
       setUploadStatus({
         type: "error",
-        message: "Silakan pilih file terlebih dahulu.",
+        message: "Please select a file first.",
       });
 
       return;
@@ -194,49 +160,31 @@ export default function UploadData() {
     setUploadStatus(null);
 
     try {
-      // ==========================================
-      // FORM DATA
-      // ==========================================
-
       const formData = new FormData();
 
-      // "file" harus disesuaikan dengan nama field
-      // yang diminta oleh FastAPI leader kamu.
       formData.append("file", selectedFile);
-
-      // ==========================================
-      // API REQUEST
-      // ==========================================
 
       const response = await fetch(
         "http://localhost:8000/api/upload",
         {
           method: "POST",
-
-          // JANGAN tambahkan Content-Type manual.
-          // Browser akan otomatis membuat:
-          // multipart/form-data + boundary
           body: formData,
         }
       );
 
       if (!response.ok) {
-        throw new Error("Gagal mengunggah dataset.");
+        throw new Error("Failed to upload dataset.");
       }
 
       const result = await response.json();
 
       console.log("Upload response:", result);
 
-      // ==========================================
-      // SUCCESS
-      // ==========================================
-
       setUploadStatus({
         type: "success",
         message:
           result.message ||
-          "Dataset berhasil diunggah dan diproses.",
+          "Dataset successfully uploaded and processed.",
       });
 
       setSelectedFile(null);
@@ -251,7 +199,7 @@ export default function UploadData() {
         type: "error",
         message:
           error.message ||
-          "Terjadi kesalahan saat mengunggah dataset.",
+          "An error occurred while uploading the dataset.",
       });
     } finally {
       setIsUploading(false);
@@ -267,12 +215,11 @@ export default function UploadData() {
         </h1>
 
         <p className="mt-1 text-gray-400">
-          Unggah file dataset untuk memperbarui knowledge base AI.
+          Upload dataset files to update the AI knowledge base.
         </p>
       </div>
 
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-8">
-
 
         {!selectedFile && (
           <div
@@ -295,11 +242,11 @@ export default function UploadData() {
             </h2>
 
             <p className="mt-2 text-sm text-gray-400">
-              atau pilih file dari komputer Anda
+              or select a file from your computer
             </p>
 
             <p className="mt-2 text-xs text-gray-500">
-              Mendukung CSV, Excel (.xlsx, .xls), dan JSON
+              Supports CSV, Excel (.xlsx, .xls), and JSON
             </p>
 
             <input
@@ -345,8 +292,6 @@ export default function UploadData() {
                   </div>
 
                 </div>
-
-    
 
                 <button
                   type="button"
@@ -428,19 +373,19 @@ export default function UploadData() {
 
         <ul className="mt-3 space-y-2 text-sm text-gray-400">
           <li>
-            • Format yang didukung: CSV, Excel, dan JSON
+            • Supported formats: CSV, Excel, and JSON
           </li>
 
           <li>
-            • Ukuran maksimal file: 10 MB
+            • Maximum file size: 10 MB
           </li>
 
           <li>
-            • Dataset akan digunakan untuk memperbarui Knowledge Base AI
+            • Dataset will be used to update the AI Knowledge Base
           </li>
 
           <li>
-            • Pastikan data yang diunggah sudah sesuai dengan struktur dataset yang digunakan sistem
+            • Ensure the uploaded data matches the system's dataset structure
           </li>
         </ul>
 

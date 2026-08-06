@@ -25,11 +25,11 @@ export default function UploadDoc() {
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const validateFile = (file) => {
-    if (!file) return { valid: false, message: "File tidak ditemukan." };
+    if (!file) return { valid: false, message: "File not found." };
     const fileName = file.name.toLowerCase();
     const isValidExtension = allowedExtensions.some((ext) => fileName.endsWith(ext));
-    if (!isValidExtension) return { valid: false, message: "Format file tidak didukung. Gunakan CSV, Excel, atau JSON." };
-    if (file.size > MAX_FILE_SIZE) return { valid: false, message: "Ukuran file terlalu besar. Maksimal 10 MB." };
+    if (!isValidExtension) return { valid: false, message: "File format not supported. Use CSV, Excel, or JSON." };
+    if (file.size > MAX_FILE_SIZE) return { valid: false, message: "File size is too large. Maximum is 10 MB." };
     return { valid: true, message: "File valid." };
   };
 
@@ -89,7 +89,7 @@ export default function UploadDoc() {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setUploadStatus({ type: "error", message: "Silakan pilih file terlebih dahulu." });
+      setUploadStatus({ type: "error", message: "Please select a file first." });
       return;
     }
 
@@ -105,19 +105,19 @@ export default function UploadDoc() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Gagal mengunggah dataset.");
+      if (!response.ok) throw new Error("Failed to upload dataset.");
       const result = await response.json();
 
       setUploadStatus({
         type: "success",
-        message: result.message || "Dataset berhasil diunggah dan diproses.",
+        message: result.message || "Dataset successfully uploaded and processed.",
       });
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       setUploadStatus({
         type: "error",
-        message: error.message || "Terjadi kesalahan saat mengunggah dataset.",
+        message: error.message || "An error occurred while uploading the dataset.",
       });
     } finally {
       setIsUploading(false);
@@ -131,13 +131,13 @@ export default function UploadDoc() {
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
       >
         <ArrowLeft size={18} />
-        Kembali ke Knowledge AI
+        Back to Knowledge AI
       </button>
 
       <div>
         <h1 className="text-2xl font-bold text-white sm:text-3xl">Upload Dataset</h1>
         <p className="mt-1 text-sm text-gray-400 sm:text-base">
-          Unggah file dataset untuk memperbarui knowledge base AI.
+          Upload dataset files to update the AI knowledge base.
         </p>
       </div>
 
@@ -157,8 +157,8 @@ export default function UploadDoc() {
               <UploadCloud size={32} />
             </div>
             <h2 className="text-lg font-bold text-white sm:text-xl">Drag & Drop Dataset</h2>
-            <p className="mt-2 text-sm text-gray-400">atau pilih file dari komputer Anda</p>
-            <p className="mt-2 text-xs text-gray-500">Mendukung CSV, Excel (.xlsx, .xls), dan JSON</p>
+            <p className="mt-2 text-sm text-gray-400">or select a file from your computer</p>
+            <p className="mt-2 text-xs text-gray-500">Supports CSV, Excel (.xlsx, .xls), and JSON</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -242,10 +242,10 @@ export default function UploadDoc() {
       <div className="rounded-xl border border-[#1F2937] bg-[#121620] p-5 sm:p-6">
         <h3 className="font-semibold text-white">Dataset Information</h3>
         <ul className="mt-3 space-y-2 text-sm text-gray-400">
-          <li>• Format yang didukung: CSV, Excel, dan JSON</li>
-          <li>• Ukuran maksimal file: 10 MB</li>
-          <li>• Dataset akan digunakan untuk memperbarui Knowledge Base AI</li>
-          <li>• Pastikan data yang diunggah sudah sesuai dengan struktur dataset yang digunakan sistem</li>
+          <li>• Supported formats: CSV, Excel, and JSON</li>
+          <li>• Maximum file size: 10 MB</li>
+          <li>• Dataset will be used to update the AI Knowledge Base</li>
+          <li>• Ensure the uploaded data matches the system's dataset structure</li>
         </ul>
       </div>
     </div>

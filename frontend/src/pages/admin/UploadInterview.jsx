@@ -26,11 +26,11 @@ export default function UploadInterview() {
     const allowedExtensions = ["mp3", "wav", "m4a"];
 
     if (!allowedExtensions.includes(fileExtension)) {
-      alert("Format file tidak didukung. Gunakan MP3, WAV, atau M4A.");
+      alert("File format not supported. Use MP3, WAV, or M4A.");
       return;
     }
     if (selectedFile.size > 100 * 1024 * 1024) {
-      alert("Ukuran file maksimal adalah 100 MB.");
+      alert("Maximum file size is 100 MB.");
       return;
     }
     setFile(selectedFile);
@@ -56,26 +56,24 @@ export default function UploadInterview() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) {
-      alert("Silakan pilih file interview terlebih dahulu.");
+      alert("Please select an interview file first.");
       return;
     }
     if (!title.trim()) {
-      alert("Silakan masukkan judul interview.");
+      alert("Please enter an interview title.");
       return;
     }
 
     setIsUploading(true);
 
-    // Bikin FormData untuk ngirim file ke backend
     const formData = new FormData();
     formData.append("title", title);
     formData.append("file", file);
 
     try {
-      // Tembak ke API backend yang asli
       const response = await fetch("http://localhost:8000/api/knowledge/upload-interview", {
         method: "POST",
-        body: formData, // Browser otomatis ngatur Content-Type multipart/form-data
+        body: formData,
       });
 
       const data = await response.json();
@@ -84,11 +82,11 @@ export default function UploadInterview() {
         setSuccessMessage(data.message);
         setUploadSuccess(true);
       } else {
-        alert("Gagal memproses AI: " + data.error);
+        alert("Failed to process AI: " + data.error);
       }
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan saat memproses interview ke backend.");
+      alert("An error occurred while processing the interview on the backend.");
     } finally {
       setIsUploading(false);
     }
@@ -101,13 +99,13 @@ export default function UploadInterview() {
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
       >
         <ArrowLeft size={18} />
-        Kembali ke Knowledge AI
+        Back to Knowledge AI
       </button>
 
       <div>
         <h1 className="text-2xl font-bold text-white sm:text-3xl">Upload Engineer Interview</h1>
         <p className="mt-1 text-sm text-gray-400 sm:text-base">
-          Upload rekaman interview engineer untuk diproses menjadi knowledge AI.
+          Upload engineer interview recordings to be processed into AI knowledge.
         </p>
       </div>
 
@@ -115,18 +113,18 @@ export default function UploadInterview() {
         <div className="flex items-start gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-5">
           <CheckCircle2 size={22} className="mt-0.5 shrink-0 text-green-400" />
           <div>
-            <div className="font-semibold text-green-400">Proses AI Selesai!</div>
+            <div className="font-semibold text-green-400">AI Processing Complete!</div>
             <p className="mt-1 text-sm leading-6 text-gray-300">
-              {successMessage || "File telah diproses oleh AI dan berhasil disimpan."}
+              {successMessage || "File has been processed by AI and successfully saved."}
             </p>
             <p className="mt-2 text-xs text-gray-500">
-              Hasil ekstraksi multi-kasus kini tersedia di tabel Knowledge Base.
+              Multi-case extraction results are now available in the Knowledge Base table.
             </p>
             <button
               onClick={() => navigate("/admin/knowledge-ai")}
               className="mt-4 text-sm font-medium text-green-400 hover:text-green-300"
             >
-              Kembali ke Knowledge AI →
+              Back to Knowledge AI →
             </button>
           </div>
         </div>
@@ -142,11 +140,11 @@ export default function UploadInterview() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Diagnosis Mesin Packaging"
+                placeholder="Example: Packaging Machine Diagnosis"
                 className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#7C3AED]"
               />
               <p className="mt-2 text-xs text-gray-500">
-                Gunakan judul yang menggambarkan topik atau masalah utama dalam interview.
+                Use a title that describes the main topic or issue in the interview.
               </p>
             </div>
           </div>
@@ -173,7 +171,7 @@ export default function UploadInterview() {
                   <UploadCloud size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-white">Drag & Drop Interview Recording</h3>
-                <p className="mt-2 text-sm text-gray-400">atau klik untuk memilih file</p>
+                <p className="mt-2 text-sm text-gray-400">or click to select a file</p>
                 <p className="mt-3 text-xs text-gray-500">Supported: MP3, WAV, M4A • Maximum 100 MB</p>
                 <input
                   ref={fileInputRef}

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 from groq import Groq
 import os
 import json
@@ -55,6 +56,9 @@ class MachineInput(BaseModel):
     status: str
     temp: str
     health: int
+    rpm: Optional[str] = None
+    current: Optional[str] = None
+    vibration: Optional[str] = None
 
 class UserInput(BaseModel):
     id: str
@@ -62,6 +66,7 @@ class UserInput(BaseModel):
     email: str
     role: str
     status: str
+
 def get_knowledge_base():
     try:
         response = supabase.table("knowledge_cases").select("*").execute()
@@ -219,10 +224,8 @@ async def upload_dataset(file: UploadFile = File(...)):
         else:
             return {"error": "Format file tidak didukung"}
 
-        # Ambil sampel lebih banyak (misal 10 baris)
         data_sample = df.head(10).to_json(orient="records")
 
-        # Minta Groq membalas dengan format Array of Objects di dalam key "cases"
         prompt = f"""
         Anda adalah AI Engineer Assistant. Ekstrak data mentah berikut menjadi BEBERAPA kasus masalah mesin industri.
         Data: {data_sample}
@@ -337,7 +340,6 @@ async def upload_interview(title: str = Form(...), file: UploadFile = File(...))
     except Exception as e:
         return {"error": f"Gagal memproses interview: {str(e)}"}
 
-
 @app.post("/api/knowledge/manual")
 def upload_manual_knowledge(data: ManualKnowledgeInput):
     try:
@@ -358,6 +360,7 @@ def upload_manual_knowledge(data: ManualKnowledgeInput):
         return {"message": "Knowledge manual berhasil disimpan!"}
     except Exception as e:
         return {"error": f"Gagal menyimpan ke database: {str(e)}"}
+
 @app.get("/api/machines")
 def get_machines():
     res = supabase.table("machines").select("*").execute()

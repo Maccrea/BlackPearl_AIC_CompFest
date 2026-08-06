@@ -17,18 +17,17 @@ export default function UserManagement() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          // ANTI-CRASH: Ubah ID jadi string dulu sebelum disortir biar nggak error kalau ID-nya angka
           const sorted = [...data].sort((a, b) => 
             String(a.id).localeCompare(String(b.id))
           );
           setUsers(sorted);
         } else {
-          console.error("API bukan array:", data);
+          console.error("API is not an array:", data);
           setUsers([]);
         }
       })
       .catch((err) => {
-        console.error("Gagal fetch users:", err);
+        console.error("Failed to fetch users:", err);
         setUsers([]);
       });
   };
@@ -60,7 +59,7 @@ export default function UserManagement() {
       id: editingUser.id,
       name: formData.name,
       email: formData.email,
-      role: editingUser.role, // Role tetap bawaan, tidak bisa diubah
+      role: editingUser.role,
       status: formData.status
     };
 
@@ -88,7 +87,7 @@ export default function UserManagement() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">User Management</h1>
-          <p className="mt-1 text-gray-400">Kelola informasi dan status aktif pengguna sistem.</p>
+          <p className="mt-1 text-gray-400">Manage user information and system active status.</p>
         </div>
       </div>
 
@@ -116,7 +115,7 @@ export default function UserManagement() {
               {users.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-10 text-center text-sm text-gray-500">
-                    Memuat data dari database...
+                    Loading data from database...
                   </td>
                 </tr>
               ) : (
@@ -157,7 +156,7 @@ export default function UserManagement() {
               <div>
                 <h2 className="text-xl font-bold text-white">Edit User</h2>
                 <p className="mt-1 text-sm text-gray-400">
-                  Perbarui informasi untuk role <span className="font-bold text-[#A855F7]">{editingUser?.role}</span>.
+                  Update information for role <span className="font-bold text-[#A855F7]">{editingUser?.role}</span>.
                 </p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-2 text-gray-400 transition hover:bg-white/5 hover:text-white">
@@ -176,7 +175,7 @@ export default function UserManagement() {
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">Status</label>
-                <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none focus:border-[#7C3AED]">
+                <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 text-sm text-white outline-none transition focus:border-[#7C3AED]">
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>

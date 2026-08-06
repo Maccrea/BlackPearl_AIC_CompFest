@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Thermometer,
   Activity,
@@ -88,14 +88,14 @@ export default function MachineStatus() {
           Machine Status
         </h1>
         <p className="mt-1 text-[#9CA3AF]">
-          Monitoring kondisi dan parameter operasional seluruh mesin.
+          Monitor the condition and operational parameters of all machines.
         </p>
       </div>
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5">
         <div className="mb-4 flex items-center gap-2">
           <Filter size={18} className="text-[#A78BFA]" />
           <h2 className="text-sm font-semibold text-white">
-            Filter Mesin
+            Filter Machines
           </h2>
         </div>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -132,7 +132,7 @@ export default function MachineStatus() {
             <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="text"
-              placeholder="Cari mesin..."
+              placeholder="Search machines..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-[#6B7280] focus:border-[#7C3AED]"
@@ -143,7 +143,7 @@ export default function MachineStatus() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-[#9CA3AF]">
-            Menampilkan <span className="font-semibold text-white">{filteredMachines.length}</span> dari <span className="font-semibold text-white">{machines.length}</span> mesin
+            Showing <span className="font-semibold text-white">{filteredMachines.length}</span> of <span className="font-semibold text-white">{machines.length}</span> machines
           </p>
         </div>
         {(statusFilter !== "all" || searchQuery) && (
@@ -211,8 +211,8 @@ export default function MachineStatus() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1F2937]">
             <Search size={24} className="text-[#6B7280]" />
           </div>
-          <h3 className="text-lg font-bold text-white">Mesin tidak ditemukan</h3>
-          <p className="mt-2 text-sm text-[#8B95A7]">Tidak ada mesin yang sesuai dengan filter atau pencarian.</p>
+          <h3 className="text-lg font-bold text-white">No machines found</h3>
+          <p className="mt-2 text-sm text-[#8B95A7]">No machines match the current filter or search criteria.</p>
           <button
             onClick={() => {
               setStatusFilter("all");

@@ -49,7 +49,39 @@ export default function ProductionDashboard() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setMachines(data);
+          const evaluatedData = data.map((machine) => {
+            const temp = parseFloat(String(machine.temp).replace(/[^0-9.]/g, '')) || 25;
+            const rpm = parseFloat(String(machine.rpm).replace(/[^0-9.]/g, '')) || 1450;
+            const current = parseFloat(String(machine.current).replace(/[^0-9.]/g, '')) || 12.5;
+            const vibration = parseFloat(String(machine.vibration).replace(/[^0-9.]/g, '')) || 2.1;
+            
+            let calcHealth = 100;
+            if (temp >= 75) calcHealth -= 35;
+            else if (temp >= 60) calcHealth -= 15;
+
+            if (vibration >= 4.5) calcHealth -= 30;
+            else if (vibration >= 3.0) calcHealth -= 15;
+
+            if (rpm > 1550) calcHealth -= 10;
+            if (current > 15) calcHealth -= 10;
+
+            calcHealth = Math.max(0, calcHealth);
+
+            const dbHealth = parseFloat(machine.health) || 100;
+            const finalHealth = Math.min(calcHealth, dbHealth);
+            
+            let realStatus = "Healthy";
+            
+            if (temp >= 75 || finalHealth <= 40 || rpm > 1550 || vibration >= 4.5) {
+              realStatus = "Critical";
+            } else if (temp >= 60 || finalHealth <= 70 || rpm > 1500 || vibration >= 3.0) {
+              realStatus = "Warning";
+            }
+
+            return { ...machine, health: finalHealth, status: realStatus };
+          });
+
+          setMachines(evaluatedData);
         }
       })
       .catch((err) => console.error(err));
@@ -106,7 +138,7 @@ export default function ProductionDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-white">Production Dashboard</h1>
           <p className="mt-1 text-[#9CA3AF]">
-            Monitor kondisi, parameter, dan alur seluruh production line terpadu.
+            Monitor the condition, parameters, and flow of all integrated production lines.
           </p>
         </div>
 
@@ -195,7 +227,7 @@ export default function ProductionDashboard() {
             <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="text"
-              placeholder="Cari nama atau tipe mesin..."
+              placeholder="Search machine name or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-[#374151] bg-[#0B0E14] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-[#6B7280] focus:border-[#7C3AED]"
@@ -218,7 +250,7 @@ export default function ProductionDashboard() {
                   <div>
                     <h2 className="text-xl font-bold text-white">{line.name}</h2>
                     <p className="text-sm text-[#8B95A7]">
-                      {line.type} • {lineMachines.length} Mesin
+                      {line.type} • {lineMachines.length} Machines
                     </p>
                   </div>
                 </div>
@@ -236,9 +268,9 @@ export default function ProductionDashboard() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1F2937]">
               <Search size={24} className="text-[#6B7280]" />
             </div>
-            <h3 className="text-lg font-bold text-white">Mesin tidak ditemukan</h3>
+            <h3 className="text-lg font-bold text-white">No machines found</h3>
             <p className="mt-2 text-sm text-[#8B95A7]">
-              Tidak ada mesin yang sesuai dengan filter atau pencarian di area ini.
+              No machines match the current filter or search in this area.
             </p>
             <button
               onClick={() => {
@@ -248,7 +280,7 @@ export default function ProductionDashboard() {
               }}
               className="mt-5 rounded-xl bg-[#7C3AED] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
             >
-              Reset Semua Filter
+              Reset All Filters
             </button>
           </div>
         )}
@@ -321,10 +353,10 @@ function MachineDetailCard({ machine }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
-        <Parameter icon={Thermometer} label="Temp" value={machine.temp || "-"} />
-        <Parameter icon={Gauge} label="RPM" value={machine.rpm || "-"} />
-        <Parameter icon={Zap} label="Current" value={machine.current ? `${machine.current} A` : "-"} />
-        <Parameter icon={Activity} label="Vibration" value={machine.vibration ? `${machine.vibration} mm/s` : "-"} />
+        <Parameter icon={Thermometer} label="Temp" value={machine.temp || "25°C"} />
+        <Parameter icon={Gauge} label="RPM" value={machine.rpm || "1450"} />
+        <Parameter icon={Zap} label="Current" value={machine.current ? `${machine.current} A` : "12.5 A"} />
+        <Parameter icon={Activity} label="Vibration" value={machine.vibration ? `${machine.vibration} mm/s` : "2.1 mm/s"} />
       </div>
 
       {machine.health !== undefined && (

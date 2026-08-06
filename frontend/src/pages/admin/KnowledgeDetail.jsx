@@ -23,8 +23,8 @@ export default function KnowledgeDetail() {
         setKnowledge(data);
       })
       .catch((err) => {
-        console.error("Error detail:", err);
-        setError("Gagal memuat detail knowledge");
+        console.error("Detail error:", err);
+        setError("Failed to load knowledge details");
       });
   }, [id]);
 
@@ -33,18 +33,17 @@ export default function KnowledgeDetail() {
   }
 
   if (!knowledge) {
-    return <div className="mt-10 text-center text-gray-400">Memuat data detail dari database...</div>;
+    return <div className="mt-10 text-center text-gray-400">Loading detail data from database...</div>;
   }
 
   return (
     <div className="space-y-6">
-
       <button
         onClick={() => navigate("/admin/knowledge-ai")}
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
       >
         <ArrowLeft size={18} />
-        Kembali ke Knowledge AI
+        Back to Knowledge AI
       </button>
 
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
@@ -58,8 +57,7 @@ export default function KnowledgeDetail() {
             </span>
           </div>
           <p className="text-gray-400">
-            Knowledge yang diekstrak dari interview engineer
-            dan digunakan sebagai referensi diagnosis AI.
+            Knowledge extracted from engineer interviews and used as AI diagnostic references.
           </p>
         </div>
 
@@ -112,7 +110,7 @@ export default function KnowledgeDetail() {
           <div>
             <div className="text-xs text-gray-500">Analysis</div>
             <p className="mt-2 text-sm leading-6 text-gray-300">
-              {knowledge.rootCause || "Tidak ada deskripsi akar masalah."}
+              {knowledge.rootCause || "No root cause description available."}
             </p>
           </div>
 
@@ -150,7 +148,7 @@ export default function KnowledgeDetail() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500">Gejala tidak tercatat.</p>
+              <p className="text-sm text-gray-500">No symptoms recorded.</p>
             )}
           </div>
         </div>
@@ -176,7 +174,7 @@ export default function KnowledgeDetail() {
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-500">Tidak ada saran tindakan.</p>
+            <p className="text-sm text-gray-500">No recommended actions available.</p>
           )}
         </div>
       </div>
@@ -191,14 +189,14 @@ export default function KnowledgeDetail() {
               Original Interview Transcript
             </h2>
             <p className="text-xs text-gray-500">
-              Hasil Speech-to-Text dari interview engineer
+              Speech-to-Text results from the engineer interview
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-[#1F2937] bg-[#0B0E14] p-5">
           <p className="whitespace-pre-line text-sm leading-7 text-gray-300">
-            {knowledge.transcript || "Tidak ada transkrip audio untuk kasus ini."}
+            {knowledge.transcript || "No audio transcript available for this case."}
           </p>
         </div>
       </div>
@@ -211,7 +209,6 @@ export default function KnowledgeDetail() {
           Back to Knowledge Base
         </button>
       </div>
-
     </div>
   );
 }

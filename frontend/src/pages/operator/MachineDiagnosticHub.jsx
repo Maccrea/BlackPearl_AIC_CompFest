@@ -1,51 +1,145 @@
 import React, { useState, useEffect } from "react";
 import {
   ArrowLeft, Activity, Gauge, Thermometer, Zap, AlertTriangle, CheckCircle2,
-  Brain, Award, ShieldCheck, XCircle, Send, Wrench, BookOpenCheck, ChevronDown,
+  Brain, Award, ShieldCheck, XCircle, Send, Wrench, BookOpenCheck, ChevronDown, Loader2
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import dashboard from "../../mock/dashboard";
 
 export default function MachineDiagnosticHub() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [attentionMachines, setAttentionMachines] = useState(
-    dashboard.machines.filter((m) => m.status !== "healthy")
-  );
+  const [machines, setMachines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const initialId = id ? parseInt(id) : (attentionMachines.length > 0 ? attentionMachines[0].id : null);
-  const [selectedMachineId, setSelectedMachineId] = useState(initialId);
+  const [resolvedIds, setResolvedIds] = useState([]);
 
   const [validationStatus, setValidationStatus] = useState("pending");
   const [selectedDecision, setSelectedDecision] = useState(null);
   const [engineerNote, setEngineerNote] = useState("");
 
   useEffect(() => {
-    const currentId = id ? parseInt(id) : null;
-    if (currentId && currentId !== selectedMachineId) {
-      setSelectedMachineId(currentId);
+    fetch("http://localhost:8000/api/machines")
+      .then((res) => res.json())
+      .then((data) => {
+        const fetchedMachines = Array.isArray(data) ? data : (data.data || []);
+        
+        const evaluatedData = fetchedMachines.map((machine) => {
+          const temp = parseFloat(String(machine.temp).replace(/[^0-9.]/g, '')) || 25;
+          const rpm = parseFloat(String(machine.rpm).replace(/[^0-9.]/g, '')) || 1450;
+          const current = parseFloat(String(machine.current).replace(/[^0-9.]/g, '')) || 12.5;
+          const vibration = parseFloat(String(machine.vibration).replace(/[^0-9.]/g, '')) || 2.1;
+
+          let calcHealth = 100;
+          if (temp >= 75) calcHealth -= 35;
+          else if (temp >= 60) calcHealth -= 15;
+
+          if (vibration >= 4.5) calcHealth -= 30;
+          else if (vibration >= 3.0) calcHealth -= 15;
+
+          if (rpm > 1550) calcHealth -= 10;
+          if (current > 15) calcHealth -= 10;
+
+          calcHealth = Math.max(0, calcHealth);
+
+          const dbHealth = parseFloat(machine.health) || 100;
+          const finalHealth = Math.min(calcHealth, dbHealth);
+
+          let realStatus = "Healthy";
+          if (temp >= 75 || finalHealth <= 40 || rpm > 1550 || vibration >= 4.5) {
+            realStatus = "Critical";
+          } else if (temp >= 60 || finalHealth <= 70 || rpm > 1500 || vibration >= 3.0) {
+            realStatus = "Warning";
+          }
+
+          return {
+            ...machine,
+            parsedTemp: temp,
+            parsedRpm: rpm,
+            parsedCurrent: current,
+            parsedVibration: vibration,
+            health: finalHealth,
+            status: realStatus
+          };
+        });
+
+        setMachines(evaluatedData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch data from API:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const attentionMachines = machines.filter(
+    (m) => m.status?.toLowerCase() !== "healthy" && !resolvedIds.includes(String(m.id))
+  );
+
+  useEffect(() => {
+    if (!loading && attentionMachines.length > 0 && !id) {
+      navigate(`/operator/machine-diagnostic/${attentionMachines[0].id}`, { replace: true });
     }
+  }, [loading, attentionMachines, id, navigate]);
+
+  const selectedMachineId = id ? String(id) : null;
+  const machine = attentionMachines.find((m) => String(m.id) === selectedMachineId);
+
+  useEffect(() => {
     setValidationStatus("pending");
     setSelectedDecision(null);
     setEngineerNote("");
-  }, [id]);
+  }, [selectedMachineId]);
 
   const handleMachineChange = (e) => {
-    const newId = Number(e.target.value);
-    navigate(`/operator/machine-diagnostic/${newId}`); // Update URL!
+    const newId = e.target.value;
+    navigate(`/operator/machine-diagnostic/${newId}`);
   };
 
-  const machine = attentionMachines.find((m) => m.id === selectedMachineId);
+  const similarCaseData = {
+    similarityScore: 92,
+    caseTitle: "Motor Overheating Issue",
+    previousSolution: [
+      "Turn off the main power supply to the machine.",
+      "Inspect and clean the air filter on the cooling system.",
+      "Replace the lubricant on the bearing components if they are dry.",
+      "Perform a low-speed test for 5 minutes."
+    ]
+  };
+
+  const handleFixMachine = () => {
+    setValidationStatus("saved");
+    
+    setTimeout(() => {
+      setResolvedIds((prev) => [...prev, selectedMachineId]);
+      
+      const nextMachines = attentionMachines.filter((m) => String(m.id) !== selectedMachineId);
+      
+      if (nextMachines.length > 0) {
+        navigate(`/operator/machine-diagnostic/${nextMachines[0].id}`);
+      } else {
+        navigate("/operator/production-line"); 
+      }
+    }, 2000); 
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center text-gray-400">
+        <Loader2 size={48} className="mb-4 animate-spin text-[#7C3AED]" />
+        <p>Loading machine diagnostic data...</p>
+      </div>
+    );
+  }
 
   if (!machine) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <CheckCircle2 size={48} className="mb-4 text-[#10B981]" />
-        <h1 className="text-xl font-bold text-white">Semua Sistem Aman</h1>
-        <p className="mt-2 text-[#8B95A7]">Tidak ada mesin yang memerlukan diagnosis AI saat ini.</p>
-        <button onClick={() => navigate("/operator")} className="mt-6 rounded-xl bg-[#7C3AED] px-4 py-2 text-sm text-white">
-          Kembali ke Dashboard
+        <h1 className="text-xl font-bold text-white">All Systems Normal</h1>
+        <p className="mt-2 text-[#8B95A7]">No machines require AI diagnosis at the moment.</p>
+        <button onClick={() => navigate("/operator/production-line")} className="mt-6 rounded-xl bg-[#7C3AED] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#6D28D9] transition">
+          Back to Dashboard
         </button>
       </div>
     );
@@ -53,50 +147,36 @@ export default function MachineDiagnosticHub() {
 
   const generateDynamicAnalysis = (currentMachine) => {
     const anomalies = [];
-    if (currentMachine.temperature > 75) anomalies.push({ parameter: "Temperature", value: currentMachine.temperature, unit: "°C", threshold: 75 });
-    if (currentMachine.vibration > 4.5) anomalies.push({ parameter: "Vibration", value: currentMachine.vibration, unit: "mm/s", threshold: 4.5 });
-    if (currentMachine.current > 15) anomalies.push({ parameter: "Current", value: currentMachine.current, unit: "A", threshold: 15 });
-    if (currentMachine.rpm > 1550) anomalies.push({ parameter: "RPM", value: currentMachine.rpm, unit: "RPM", threshold: 1550 });
+    if (currentMachine.parsedTemp >= 75) anomalies.push({ parameter: "Temperature", value: currentMachine.parsedTemp, unit: "°C", threshold: 75 });
+    if (currentMachine.parsedVibration >= 4.5) anomalies.push({ parameter: "Vibration", value: currentMachine.parsedVibration, unit: "mm/s", threshold: 4.5 });
+    if (currentMachine.parsedCurrent > 15) anomalies.push({ parameter: "Current", value: currentMachine.parsedCurrent, unit: "A", threshold: 15 });
+    if (currentMachine.parsedRpm > 1550) anomalies.push({ parameter: "RPM", value: currentMachine.parsedRpm, unit: "RPM", threshold: 1550 });
 
     return {
-      aiPrediction: anomalies.length > 0 ? (currentMachine.id === 3 ? "Bearing Wear Detected" : "Motor Overheating") : "Normal Operation",
-      aiConfidence: currentMachine.id === 3 ? 88 : 94,
+      aiPrediction: anomalies.length > 0 ? (currentMachine.status?.toLowerCase() === "critical" ? "Bearing Wear Detected" : "Motor Overheating") : "Normal Operation",
+      aiConfidence: currentMachine.status?.toLowerCase() === "critical" ? 88 : 94,
       detectedAnomalies: anomalies,
     };
   };
 
   const dynamicAnalysis = generateDynamicAnalysis(machine);
-  const hasSimilarCase = machine.id === 5; 
-  const similarCaseData = dashboard.similarCaseMatch;
-
-  const handleFixMachine = () => {
-    setValidationStatus("saved");
-    
-    setTimeout(() => {
-      const newMachineList = attentionMachines.filter((m) => m.id !== selectedMachineId);
-      setAttentionMachines(newMachineList);
-      
-      if (newMachineList.length > 0) {
-        navigate(`/operator/machine-diagnostic/${newMachineList[0].id}`);
-      }
-    }, 2000); 
-  };
+  const hasSimilarCase = machine.status?.toLowerCase() === "warning"; 
 
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <button onClick={() => navigate(-1)} className="mb-5 flex items-center gap-2 text-sm text-[#9CA3AF] transition hover:text-white">
-          <ArrowLeft size={17} /> Kembali
+        <button onClick={() => navigate("/operator/production-line")} className="mb-5 flex items-center gap-2 text-sm text-[#9CA3AF] transition hover:text-white">
+          <ArrowLeft size={17} /> Back to Dashboard
         </button>
 
         <div className="mb-2 flex flex-col gap-4 rounded-2xl border border-[#1F2937] bg-[#121620] p-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-xl font-bold text-white">Diagnostic Hub</h1>
-            <p className="mt-1 text-sm text-[#8B95A7]">Pindah antar mesin bermasalah untuk melihat diagnosis AI.</p>
+            <p className="mt-1 text-sm text-[#8B95A7]">Switch between problematic machines to view AI diagnosis.</p>
           </div>
           <div className="relative w-full sm:w-[320px]">
             <select
-              value={selectedMachineId}
+              value={selectedMachineId || ""}
               onChange={handleMachineChange}
               className="w-full appearance-none rounded-xl border border-[#374151] bg-[#0B0E14] px-4 py-3 pr-10 text-sm font-bold text-white outline-none transition focus:border-[#7C3AED]"
             >
@@ -110,12 +190,11 @@ export default function MachineDiagnosticHub() {
         <MachineHeader machine={machine} />
       </div>
 
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <ParameterCard icon={Thermometer} label="Suhu Motor" value={`${machine.temperature}°C`} threshold={75} abnormal={machine.temperature > 75} />
-        <ParameterCard icon={Activity} label="Vibrasi" value={`${machine.vibration} mm/s`} threshold={4.5} abnormal={machine.vibration > 4.5} />
-        <ParameterCard icon={Gauge} label="Kecepatan" value={`${machine.rpm} RPM`} threshold={1550} abnormal={machine.rpm > 1550} />
-        <ParameterCard icon={Zap} label="Arus Listrik" value={`${machine.current} A`} threshold={15} abnormal={machine.current > 15} />
+        <ParameterCard icon={Thermometer} label="Motor Temperature" value={`${machine.parsedTemp}°C`} threshold={75} abnormal={machine.parsedTemp >= 75} />
+        <ParameterCard icon={Activity} label="Vibration" value={`${machine.parsedVibration} mm/s`} threshold={4.5} abnormal={machine.parsedVibration >= 4.5} />
+        <ParameterCard icon={Gauge} label="Speed" value={`${machine.parsedRpm} RPM`} threshold={1550} abnormal={machine.parsedRpm > 1550} />
+        <ParameterCard icon={Zap} label="Current" value={`${machine.parsedCurrent} A`} threshold={15} abnormal={machine.parsedCurrent > 15} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -154,11 +233,11 @@ export default function MachineDiagnosticHub() {
             />
           )}
 
-          {hasSimilarCase && status !== "saved" && (
+          {hasSimilarCase && validationStatus !== "saved" && (
             <div className="rounded-2xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 p-6 text-center">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6]/20 text-[#3B82F6]"><BookOpenCheck size={28} /></div>
-              <h3 className="text-lg font-bold text-white">SOP Tersedia</h3>
-              <p className="mt-2 text-sm text-[#8B95A7]">Kasus ini sudah diselesaikan sebelumnya. Operator dapat langsung mengikuti SOP tanpa perlu validasi ulang.</p>
+              <h3 className="text-lg font-bold text-white">SOP Available</h3>
+              <p className="mt-2 text-sm text-[#8B95A7]">This case has been resolved previously. Operators can directly follow the SOP without re-validation.</p>
             </div>
           )}
         </div>
@@ -168,9 +247,9 @@ export default function MachineDiagnosticHub() {
 }
 
 function MachineHeader({ machine }) {
-  const isCritical = machine.status === "critical";
+  const isCritical = machine.status?.toLowerCase() === "critical";
   const badgeColors = isCritical ? "bg-[#EF4444]/10 text-[#EF4444]" : "bg-[#F59E0B]/10 text-[#F59E0B]";
-  const StatusIcon = isCritical ? AlertTriangle : AlertTriangle;
+  const StatusIcon = AlertTriangle;
 
   return (
     <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -195,7 +274,7 @@ function ParameterCard({ icon: Icon, label, value, threshold, abnormal }) {
         {abnormal && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#EF4444]/20 text-[10px] font-bold text-[#EF4444]">!</span>}
       </div>
       <div className={`mt-3 text-2xl font-bold ${abnormal ? "text-[#EF4444]" : "text-white"}`}>{value}</div>
-      <div className="mt-1 text-[11px] text-[#6B7280]">Ambang batas: {threshold}</div>
+      <div className="mt-1 text-[11px] text-[#6B7280]">Threshold: {threshold}</div>
     </div>
   );
 }
@@ -207,7 +286,7 @@ function AiDiagnosis({ analysis }) {
         <div className="rounded-xl bg-[#7C3AED]/10 p-3 text-[#A855F7]"><Brain size={24} /></div>
         <div className="flex-1">
           <h2 className="text-lg font-bold text-white">AI Diagnosis</h2>
-          <p className="text-sm text-[#8B95A7]">Analisis berdasarkan anomali parameter terkini</p>
+          <p className="text-sm text-[#8B95A7]">Analysis based on recent parameter anomalies</p>
         </div>
       </div>
       <div className="flex flex-col gap-6 md:flex-row">
@@ -236,7 +315,7 @@ function SimilarCasePanel({ similarCase, onFollowSOP }) {
         <div className="rounded-xl bg-[#10B981]/10 p-3 text-[#10B981]"><Award size={22} /></div>
         <div>
           <h2 className="text-lg font-bold text-white">Historical Case Match</h2>
-          <p className="text-xs text-[#8B95A7]">Tingkat kemiripan kasus <span className="font-bold text-[#10B981]">{similarCase.similarityScore}%</span></p>
+          <p className="text-xs text-[#8B95A7]">Case similarity score <span className="font-bold text-[#10B981]">{similarCase.similarityScore}%</span></p>
         </div>
       </div>
       <div className="space-y-4">
@@ -251,7 +330,7 @@ function SimilarCasePanel({ similarCase, onFollowSOP }) {
             ))}
           </ol>
           <button onClick={onFollowSOP} className="mt-5 w-full rounded-xl bg-[#10B981] py-3 text-sm font-bold text-white hover:bg-[#059669] transition">
-            Tandai Selesai (Ikuti SOP)
+            Mark as Resolved (Follow SOP)
           </button>
         </div>
       </div>
@@ -260,13 +339,21 @@ function SimilarCasePanel({ similarCase, onFollowSOP }) {
 }
 
 function NewRecommendationPanel({ analysis }) {
+  if (!analysis.detectedAnomalies || analysis.detectedAnomalies.length === 0) {
+    return (
+      <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6 text-center text-gray-400">
+        Waiting for anomalies to be detected...
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-6">
       <div className="mb-5 flex items-center gap-3">
         <div className="rounded-xl bg-[#F59E0B]/10 p-3 text-[#F59E0B]"><Wrench size={22} /></div>
         <div>
           <h2 className="text-lg font-bold text-white">AI Recommended Actions</h2>
-          <p className="text-xs text-[#8B95A7]">Kasus baru. AI menyarankan tindakan berdasarkan parameter.</p>
+          <p className="text-xs text-[#8B95A7]">New case. AI recommends actions based on parameters.</p>
         </div>
       </div>
       <div className="space-y-3">
@@ -274,8 +361,8 @@ function NewRecommendationPanel({ analysis }) {
           <div key={idx} className="flex items-start gap-3 rounded-xl border border-[#F59E0B]/20 bg-[#0B0E14] p-4">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F59E0B]/20 text-[11px] font-bold text-[#F59E0B]">{idx + 1}</span>
             <div>
-              <p className="text-sm font-bold text-white">Periksa {anomaly.parameter}</p>
-              <p className="mt-1 text-xs text-[#8B95A7]">Deteksi {anomaly.value} {anomaly.unit} (ambang batas: {anomaly.threshold}).</p>
+              <p className="text-sm font-bold text-white">Inspect {anomaly.parameter}</p>
+              <p className="mt-1 text-xs text-[#8B95A7]">Detected {anomaly.value} {anomaly.unit} (threshold: {anomaly.threshold}).</p>
             </div>
           </div>
         ))}
@@ -289,8 +376,8 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
     return (
       <div className="rounded-2xl border border-[#10B981]/30 bg-[#10B981]/5 p-6 text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#10B981]/20 text-[#10B981]"><CheckCircle2 size={28} /></div>
-        <h3 className="text-lg font-bold text-white">SOP Berhasil Disimpan</h3>
-        <p className="mt-2 text-sm text-[#8B95A7]">Masalah telah tertangani. Anda akan dialihkan...</p>
+        <h3 className="text-lg font-bold text-white">SOP Successfully Saved</h3>
+        <p className="mt-2 text-sm text-[#8B95A7]">Issue resolved. You will be redirected...</p>
       </div>
     );
   }
@@ -301,7 +388,7 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
         <div className="rounded-xl bg-[#3B82F6]/10 p-3 text-[#3B82F6]"><ShieldCheck size={22} /></div>
         <div>
           <h2 className="text-lg font-bold text-white">Engineer Validation</h2>
-          <p className="text-xs text-[#8B95A7]">Wajib disetujui (Kasus Baru)</p>
+          <p className="text-xs text-[#8B95A7]">Approval required (New Case)</p>
         </div>
       </div>
       <div className="space-y-3">
@@ -309,13 +396,13 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
           onClick={() => setDecision("approved")}
           className={`flex w-full items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition ${decision === "approved" ? "border-[#10B981] bg-[#10B981]/10 text-[#10B981]" : "border-[#374151] bg-[#0B0E14] text-white hover:border-[#10B981]/50"}`}
         >
-          <CheckCircle2 size={16} /> Setujui Rekomendasi
+          <CheckCircle2 size={16} /> Approve Recommendation
         </button>
         <button
           onClick={() => setDecision("rejected")}
           className={`flex w-full items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition ${decision === "rejected" ? "border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444]" : "border-[#374151] bg-[#0B0E14] text-white hover:border-[#EF4444]/50"}`}
         >
-          <XCircle size={16} /> Berikan Koreksi Manual
+          <XCircle size={16} /> Provide Manual Correction
         </button>
       </div>
       {decision === "rejected" && (
@@ -323,7 +410,7 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Ketik instruksi koreksi engineering di sini..."
+            placeholder="Type engineering correction instructions here..."
             className="w-full resize-none rounded-lg border border-[#374151] bg-[#0B0E14] p-3 text-sm text-white outline-none focus:border-[#7C3AED]"
             rows={3}
           />
@@ -335,7 +422,7 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
           disabled={decision === "rejected" && !note.trim()}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9] disabled:opacity-50"
         >
-          <Send size={16} /> Tandai Selesai (Simpan SOP)
+          <Send size={16} /> Mark as Resolved (Save SOP)
         </button>
       )}
     </div>

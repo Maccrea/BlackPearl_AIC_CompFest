@@ -14,7 +14,7 @@ export default function OperatorDashboard() {
         
         <div className="flex flex-col gap-6 lg:col-span-2">
           <ProductionLine />
-          <AiAnalysisProgress />
+          {/* <AiAnalysisProgress /> */}
         </div>
 
         <div className="flex flex-col gap-6  lg:col-span-1">
