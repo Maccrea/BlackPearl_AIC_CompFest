@@ -1,3 +1,11 @@
 fastapi
 uvicorn
 pydantic
+groq
+python-dotenv
+scikit-learn
+supabase
+python-multipart
+python-multipart==0.0.9
+pandas==2.2.2
+openpyxl==3.1.2

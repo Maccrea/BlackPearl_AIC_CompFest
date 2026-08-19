@@ -1,4 +1,4 @@
-#!/home/bigdih/Code/lomba/BlackPearl_AIC_CompFest/backend/venv/bin/python3
+#!/home/bigdih/Code/projek/lomba/BlackPearl_AIC_CompFest/backend/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
