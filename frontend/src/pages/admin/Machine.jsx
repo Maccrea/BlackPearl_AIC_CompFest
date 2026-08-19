@@ -14,7 +14,7 @@ export default function MachineManagement() {
   });
 
   const fetchMachines = () => {
-    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines")
+    fetch("http://localhost:8000/api/machines")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -107,7 +107,7 @@ export default function MachineManagement() {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines/${id}`, { 
+      await fetch(`http://localhost:8000/api/machines/${id}`, { 
         method: "DELETE" 
       });
       fetchMachines();
@@ -139,8 +139,8 @@ export default function MachineManagement() {
 
     const isEdit = editingMachine !== null;
     const url = isEdit 
-      ? `black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines/${editingMachine.id}` 
-      : "black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines";
+      ? `http://localhost:8000/api/machines/${editingMachine.id}` 
+      : "http://localhost:8000/api/machines";
     
     const payload = {
       id: isEdit ? editingMachine.id : `M${Date.now()}`,

@@ -33,7 +33,7 @@ export default function Settings() {
           <input
             type="text"
             className="mt-2 w-full rounded-xl border border-[#1F2937] bg-[#0F172A] p-3 text-white transition-colors focus:border-[#3B82F6] focus:outline-none"
-            defaultValue="black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api"
+            defaultValue="http://localhost:8000/api"
           />
         </div>
 

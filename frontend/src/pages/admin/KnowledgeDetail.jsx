@@ -16,7 +16,7 @@ export default function KnowledgeDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge/${id}`)
+    fetch(`http://localhost:8000/api/knowledge/${id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);

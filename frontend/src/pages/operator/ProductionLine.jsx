@@ -45,7 +45,7 @@ export default function ProductionDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines")
+    fetch("http://localhost:8000/api/machines")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

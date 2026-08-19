@@ -17,7 +17,7 @@ export default function KnowledgeAI() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge")
+    fetch("http://localhost:8000/api/knowledge")
       .then((res) => res.json())
       .then((data) => {
         setKnowledgeCases(data);
@@ -110,7 +110,7 @@ export default function KnowledgeAI() {
                   </td>
                 </tr>
               ) : (
-                knowledgeCases.map((item) => (
+                knowledgeCases?.map((item) => (
                   <tr
                     key={item.id}
                     className="border-b border-[#1F2937] transition-colors last:border-0 hover:bg-white/[0.02]"

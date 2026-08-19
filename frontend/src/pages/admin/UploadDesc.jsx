@@ -43,7 +43,7 @@ export default function UploadDesc() {
         tags: formData.tags
       };
 
-      const response = await fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge/manual", {
+      const response = await fetch("http://localhost:8000/api/knowledge/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

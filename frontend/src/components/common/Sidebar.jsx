@@ -26,6 +26,7 @@ const menuSections = {
         icon: Network,
       },
       {
+        
         name: "AI Analysis",
         path: "/operator/machine-diagnostic",
         icon: BrainCircuit,

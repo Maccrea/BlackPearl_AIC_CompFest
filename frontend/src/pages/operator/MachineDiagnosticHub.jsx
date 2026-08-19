@@ -11,15 +11,18 @@ export default function MachineDiagnosticHub() {
 
   const [machines, setMachines] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [resolvedIds, setResolvedIds] = useState([]);
+
+  const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const [validationStatus, setValidationStatus] = useState("pending");
   const [selectedDecision, setSelectedDecision] = useState(null);
   const [engineerNote, setEngineerNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/machines")
+    fetch("http://localhost:8000/api/machines")
       .then((res) => res.json())
       .then((data) => {
         const fetchedMachines = Array.isArray(data) ? data : (data.data || []);
@@ -85,42 +88,105 @@ export default function MachineDiagnosticHub() {
   const selectedMachineId = id ? String(id) : null;
   const machine = attentionMachines.find((m) => String(m.id) === selectedMachineId);
 
+  // Fungsi untuk Memanggil API AI Analysis
   useEffect(() => {
-    setValidationStatus("pending");
-    setSelectedDecision(null);
-    setEngineerNote("");
-  }, [selectedMachineId]);
+    if (machine) {
+      setValidationStatus("pending");
+      setSelectedDecision(null);
+      setEngineerNote("");
+      setAiAnalysisResult(null); 
+      setIsAnalyzing(true);
+
+      const symptoms = [];
+      if (machine.parsedTemp >= 75) symptoms.push(`Suhu sangat tinggi (${machine.parsedTemp}°C)`);
+      if (machine.parsedVibration >= 4.5) symptoms.push(`Getaran parah (${machine.parsedVibration} mm/s)`);
+      if (machine.parsedCurrent > 15) symptoms.push(`Arus melebihi batas (${machine.parsedCurrent} A)`);
+      if (machine.parsedRpm > 1550) symptoms.push(`Putaran berlebih (${machine.parsedRpm} RPM)`);
+      
+      const symptomText = symptoms.length > 0 ? symptoms.join(", ") : "Mesin beroperasi di luar batas normal tanpa gejala spesifik";
+
+      fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symptoms: symptomText,
+          machine_type: machine.type
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const formattedResult = {
+          isDatabaseMatch: data.status_case === "Similar Case Found (Database)",
+          aiPrediction: data.possible_root_cause || "Unidentified Issue",
+          aiConfidence: data.confidence || 85,
+          recommendations: data.recommendations || [],
+          rawSymptoms: symptomText
+        };
+        setAiAnalysisResult(formattedResult);
+        setIsAnalyzing(false);
+      })
+      .catch(err => {
+        console.error("Gagal analisa AI:", err);
+        setIsAnalyzing(false);
+      });
+    }
+  }, [machine?.id]);
+
 
   const handleMachineChange = (e) => {
     const newId = e.target.value;
     navigate(`/operator/machine-diagnostic/${newId}`);
   };
 
-  const similarCaseData = {
-    similarityScore: 92,
-    caseTitle: "Motor Overheating Issue",
-    previousSolution: [
-      "Turn off the main power supply to the machine.",
-      "Inspect and clean the air filter on the cooling system.",
-      "Replace the lubricant on the bearing components if they are dry.",
-      "Perform a low-speed test for 5 minutes."
-    ]
+  const handleSaveValidation = async () => {
+    if (!aiAnalysisResult) return;
+    setIsSaving(true);
+    
+    // Tentukan root cause dan solusi final
+    const finalRootCause = selectedDecision === "approved" ? aiAnalysisResult.aiPrediction : (engineerNote || "Manual Correction");
+    const finalSolutions = selectedDecision === "approved" ? aiAnalysisResult.recommendations : [engineerNote];
+
+    try {
+      await fetch("http://localhost:8000/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symptoms: aiAnalysisResult.rawSymptoms,
+          root_cause: finalRootCause,
+          recommendations: finalSolutions,
+          machine_type: machine.type
+        })
+      });
+      
+      setValidationStatus("saved");
+      setTimeout(() => {
+        setResolvedIds((prev) => [...prev, selectedMachineId]);
+        const nextMachines = attentionMachines.filter((m) => String(m.id) !== selectedMachineId);
+        if (nextMachines.length > 0) {
+          navigate(`/operator/machine-diagnostic/${nextMachines[0].id}`);
+        } else {
+          navigate("/operator/production-line"); 
+        }
+      }, 2000);
+      
+    } catch (error) {
+      alert("Gagal menyimpan ke Knowledge Base");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleFixMachine = () => {
+  const handleFollowSOP = () => {
     setValidationStatus("saved");
-    
     setTimeout(() => {
       setResolvedIds((prev) => [...prev, selectedMachineId]);
-      
       const nextMachines = attentionMachines.filter((m) => String(m.id) !== selectedMachineId);
-      
       if (nextMachines.length > 0) {
         navigate(`/operator/machine-diagnostic/${nextMachines[0].id}`);
       } else {
         navigate("/operator/production-line"); 
       }
-    }, 2000); 
+    }, 2000);
   };
 
   if (loading) {
@@ -144,23 +210,6 @@ export default function MachineDiagnosticHub() {
       </div>
     );
   }
-
-  const generateDynamicAnalysis = (currentMachine) => {
-    const anomalies = [];
-    if (currentMachine.parsedTemp >= 75) anomalies.push({ parameter: "Temperature", value: currentMachine.parsedTemp, unit: "°C", threshold: 75 });
-    if (currentMachine.parsedVibration >= 4.5) anomalies.push({ parameter: "Vibration", value: currentMachine.parsedVibration, unit: "mm/s", threshold: 4.5 });
-    if (currentMachine.parsedCurrent > 15) anomalies.push({ parameter: "Current", value: currentMachine.parsedCurrent, unit: "A", threshold: 15 });
-    if (currentMachine.parsedRpm > 1550) anomalies.push({ parameter: "RPM", value: currentMachine.parsedRpm, unit: "RPM", threshold: 1550 });
-
-    return {
-      aiPrediction: anomalies.length > 0 ? (currentMachine.status?.toLowerCase() === "critical" ? "Bearing Wear Detected" : "Motor Overheating") : "Normal Operation",
-      aiConfidence: currentMachine.status?.toLowerCase() === "critical" ? 88 : 94,
-      detectedAnomalies: anomalies,
-    };
-  };
-
-  const dynamicAnalysis = generateDynamicAnalysis(machine);
-  const hasSimilarCase = machine.status?.toLowerCase() === "warning"; 
 
   return (
     <div className="space-y-6 pb-12">
@@ -199,11 +248,21 @@ export default function MachineDiagnosticHub() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <AiDiagnosis analysis={dynamicAnalysis} />
-          {hasSimilarCase ? (
-            <SimilarCasePanel similarCase={similarCaseData} onFollowSOP={handleFixMachine} />
+          {isAnalyzing || !aiAnalysisResult ? (
+             <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#121620] p-12 text-center text-gray-400">
+               <Loader2 size={32} className="mx-auto mb-4 animate-spin text-[#A855F7]" />
+               Sedang melakukan diagnosis AI ke server...
+             </div>
           ) : (
-            <NewRecommendationPanel analysis={dynamicAnalysis} />
+            <>
+              <AiDiagnosis analysis={aiAnalysisResult} />
+              
+              {aiAnalysisResult.isDatabaseMatch ? (
+                <SimilarCasePanel analysis={aiAnalysisResult} onFollowSOP={handleFollowSOP} />
+              ) : (
+                <NewRecommendationPanel analysis={aiAnalysisResult} />
+              )}
+            </>
           )}
         </div>
         <div className="flex flex-col gap-6 lg:col-span-1">
@@ -222,18 +281,19 @@ export default function MachineDiagnosticHub() {
             </div>
           </div>
 
-          {!hasSimilarCase && (
+          {!isAnalyzing && aiAnalysisResult && !aiAnalysisResult.isDatabaseMatch && (
             <ValidationPanel
               status={validationStatus}
               decision={selectedDecision}
               setDecision={setSelectedDecision}
               note={engineerNote}
               setNote={setEngineerNote}
-              onSave={handleFixMachine}
+              onSave={handleSaveValidation}
+              isSaving={isSaving}
             />
           )}
 
-          {hasSimilarCase && validationStatus !== "saved" && (
+          {!isAnalyzing && aiAnalysisResult && aiAnalysisResult.isDatabaseMatch && validationStatus !== "saved" && (
             <div className="rounded-2xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 p-6 text-center">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6]/20 text-[#3B82F6]"><BookOpenCheck size={28} /></div>
               <h3 className="text-lg font-bold text-white">SOP Available</h3>
@@ -308,21 +368,21 @@ function AiDiagnosis({ analysis }) {
   );
 }
 
-function SimilarCasePanel({ similarCase, onFollowSOP }) {
+function SimilarCasePanel({ analysis, onFollowSOP }) {
   return (
     <div className="rounded-2xl border border-[#10B981]/30 bg-[#10B981]/5 p-6">
       <div className="mb-5 flex items-center gap-3">
         <div className="rounded-xl bg-[#10B981]/10 p-3 text-[#10B981]"><Award size={22} /></div>
         <div>
           <h2 className="text-lg font-bold text-white">Historical Case Match</h2>
-          <p className="text-xs text-[#8B95A7]">Case similarity score <span className="font-bold text-[#10B981]">{similarCase.similarityScore}%</span></p>
+          <p className="text-xs text-[#8B95A7]">Ditemukan di database Knowledge Base</p>
         </div>
       </div>
       <div className="space-y-4">
         <div className="rounded-xl border border-[#1F2937] bg-[#0B0E14] p-4">
-          <div className="text-xs text-[#8B95A7]">Previous Successful Solution ({similarCase.caseTitle})</div>
+          <div className="text-xs text-[#8B95A7]">SOP Action Plan</div>
           <ol className="mt-3 space-y-2.5">
-            {similarCase.previousSolution.map((solution, idx) => (
+            {analysis.recommendations.map((solution, idx) => (
               <li key={idx} className="flex items-start gap-3 text-sm text-white">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#10B981]/20 text-[11px] font-bold text-[#10B981]">{idx + 1}</span>
                 {solution}
@@ -339,30 +399,21 @@ function SimilarCasePanel({ similarCase, onFollowSOP }) {
 }
 
 function NewRecommendationPanel({ analysis }) {
-  if (!analysis.detectedAnomalies || analysis.detectedAnomalies.length === 0) {
-    return (
-      <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-6 text-center text-gray-400">
-        Waiting for anomalies to be detected...
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-6">
       <div className="mb-5 flex items-center gap-3">
         <div className="rounded-xl bg-[#F59E0B]/10 p-3 text-[#F59E0B]"><Wrench size={22} /></div>
         <div>
           <h2 className="text-lg font-bold text-white">AI Recommended Actions</h2>
-          <p className="text-xs text-[#8B95A7]">New case. AI recommends actions based on parameters.</p>
+          <p className="text-xs text-[#8B95A7]">New case. Menunggu persetujuan Engineer.</p>
         </div>
       </div>
       <div className="space-y-3">
-        {analysis.detectedAnomalies.map((anomaly, idx) => (
+        {analysis.recommendations.map((action, idx) => (
           <div key={idx} className="flex items-start gap-3 rounded-xl border border-[#F59E0B]/20 bg-[#0B0E14] p-4">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F59E0B]/20 text-[11px] font-bold text-[#F59E0B]">{idx + 1}</span>
             <div>
-              <p className="text-sm font-bold text-white">Inspect {anomaly.parameter}</p>
-              <p className="mt-1 text-xs text-[#8B95A7]">Detected {anomaly.value} {anomaly.unit} (threshold: {anomaly.threshold}).</p>
+              <p className="text-sm font-bold text-white">{action}</p>
             </div>
           </div>
         ))}
@@ -371,7 +422,7 @@ function NewRecommendationPanel({ analysis }) {
   );
 }
 
-function ValidationPanel({ status, decision, setDecision, note, setNote, onSave }) {
+function ValidationPanel({ status, decision, setDecision, note, setNote, onSave, isSaving }) {
   if (status === "saved") {
     return (
       <div className="rounded-2xl border border-[#10B981]/30 bg-[#10B981]/5 p-6 text-center">
@@ -419,10 +470,11 @@ function ValidationPanel({ status, decision, setDecision, note, setNote, onSave 
       {decision && (
         <button
           onClick={onSave}
-          disabled={decision === "rejected" && !note.trim()}
+          disabled={isSaving || (decision === "rejected" && !note.trim())}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9] disabled:opacity-50"
         >
-          <Send size={16} /> Mark as Resolved (Save SOP)
+          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} 
+          {isSaving ? "Menyimpan ke Database..." : "Mark as Resolved (Save SOP)"}
         </button>
       )}
     </div>

@@ -20,6 +20,7 @@ export default function UploadDoc() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
+  const [extractedData, setExtractedData] = useState(null);
 
   const allowedExtensions = [".csv", ".xlsx", ".xls", ".json"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -35,6 +36,7 @@ export default function UploadDoc() {
 
   const handleFileSelect = (file) => {
     setUploadStatus(null);
+    setExtractedData(null);
     const validation = validateFile(file);
     if (!validation.valid) {
       setSelectedFile(null);
@@ -69,6 +71,7 @@ export default function UploadDoc() {
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setUploadStatus(null);
+    setExtractedData(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -95,25 +98,32 @@ export default function UploadDoc() {
 
     setIsUploading(true);
     setUploadStatus(null);
+    setExtractedData(null);
 
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/upload", {
+      const response = await fetch("http://localhost:8000/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to upload dataset.");
       const result = await response.json();
 
+      if (!response.ok || result.error) {
+        throw new Error(result.error || "Failed to upload dataset.");
+      }
+
+      setExtractedData(result.extracted_cases);
       setUploadStatus({
         type: "success",
-        message: result.message || "Dataset successfully uploaded and processed.",
+        message: result.message,
       });
+      
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      
     } catch (error) {
       setUploadStatus({
         type: "error",
@@ -124,10 +134,31 @@ export default function UploadDoc() {
     }
   };
 
+  const handleSaveToDB = async () => {
+    setIsUploading(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/save-knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cases: extractedData }),
+      });
+      
+      const result = await response.json();
+      if (!response.ok || result.error) throw new Error(result.error);
+
+      setUploadStatus({ type: "success", message: result.message });
+      setExtractedData(null);
+    } catch (error) {
+      setUploadStatus({ type: "error", message: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-6 pb-12">
       <button
-        onClick={() => navigate("/admin/knowledge-ai")}
+        onClick={() => window.location.assign("/admin/knowledge-ai")}
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
       >
         <ArrowLeft size={18} />
@@ -142,7 +173,7 @@ export default function UploadDoc() {
       </div>
 
       <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5 sm:p-8">
-        {!selectedFile && (
+        {!selectedFile && !extractedData && (
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -238,6 +269,34 @@ export default function UploadDoc() {
           </div>
         )}
       </div>
+
+      {extractedData && extractedData.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-blue-500/30 bg-[#121620] p-5 sm:p-8">
+          <h2 className="mb-4 text-xl font-bold text-white">Preview Extracted Knowledge</h2>
+          <p className="mb-6 text-sm text-gray-400">Silakan periksa hasil ekstraksi AI sebelum menyimpannya ke database.</p>
+          
+          <div className="mb-6 grid gap-4 md:grid-cols-2">
+            {extractedData.map((item, idx) => (
+              <div key={idx} className="rounded-xl border border-[#30363D] bg-[#0B0E14] p-4">
+                <h3 className="mb-2 text-md font-semibold text-white">{item.title}</h3>
+                <div className="space-y-2 text-xs text-gray-300">
+                  <p><strong className="text-gray-500">Gejala:</strong> {item.symptoms}</p>
+                  <p><strong className="text-gray-500">Penyebab:</strong> {item.root_cause}</p>
+                  <p><strong className="text-gray-500">Solusi:</strong> {item.solution}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <button
+            onClick={handleSaveToDB}
+            disabled={isUploading}
+            className="w-full rounded-xl bg-green-600 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+          >
+            {isUploading ? "Menyimpan ke Database..." : "Confirm & Save to Knowledge Base"}
+          </button>
+        </div>
+      )}
 
       <div className="rounded-xl border border-[#1F2937] bg-[#121620] p-5 sm:p-6">
         <h3 className="font-semibold text-white">Dataset Information</h3>

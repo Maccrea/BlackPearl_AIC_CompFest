@@ -1,16 +1,7 @@
 import React, { useRef, useState } from "react";
-import {
-  UploadCloud,
-  FileAudio,
-  X,
-  CheckCircle2,
-  Loader2,
-  ArrowLeft,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { UploadCloud, FileAudio, X, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 
 export default function UploadInterview() {
-  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const [file, setFile] = useState(null);
@@ -19,6 +10,7 @@ export default function UploadInterview() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [extractedData, setExtractedData] = useState(null);
 
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
@@ -65,28 +57,50 @@ export default function UploadInterview() {
     }
 
     setIsUploading(true);
+    setExtractedData(null);
 
     const formData = new FormData();
     formData.append("title", title);
     formData.append("file", file);
 
     try {
-      const response = await fetch("black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/knowledge/upload-interview", {
+      const response = await fetch("http://localhost:8000/api/knowledge/upload-interview", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && !data.error) {
         setSuccessMessage(data.message);
-        setUploadSuccess(true);
+        setExtractedData(data.extracted_cases);
       } else {
-        alert("Failed to process AI: " + data.error);
+        alert("Failed to process AI: " + (data.error || "Unknown error"));
       }
     } catch (error) {
-      console.error(error);
       alert("An error occurred while processing the interview on the backend.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveToDB = async () => {
+    setIsUploading(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/save-knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cases: extractedData }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || result.error) throw new Error(result.error);
+
+      setSuccessMessage(result.message);
+      setUploadSuccess(true);
+      setExtractedData(null);
+    } catch (error) {
+      alert("Gagal menyimpan ke database: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -95,7 +109,7 @@ export default function UploadInterview() {
   return (
     <div className="w-full space-y-6 pb-12">
       <button
-        onClick={() => navigate("/admin/knowledge-ai")}
+        onClick={() => window.location.assign("/admin/knowledge-ai")}
         className="flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
       >
         <ArrowLeft size={18} />
@@ -121,7 +135,7 @@ export default function UploadInterview() {
               Multi-case extraction results are now available in the Knowledge Base table.
             </p>
             <button
-              onClick={() => navigate("/admin/knowledge-ai")}
+              onClick={() => window.location.assign("/admin/knowledge-ai")}
               className="mt-4 text-sm font-medium text-green-400 hover:text-green-300"
             >
               Back to Knowledge AI →
@@ -130,7 +144,7 @@ export default function UploadInterview() {
         </div>
       )}
 
-      {!uploadSuccess && (
+      {!uploadSuccess && !extractedData && (
         <form onSubmit={handleUpload} className="space-y-6">
           <div className="rounded-2xl border border-[#1F2937] bg-[#121620] p-5 sm:p-6">
             <h2 className="mb-5 text-lg font-bold text-white">Interview Information</h2>
@@ -223,7 +237,7 @@ export default function UploadInterview() {
           <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={() => navigate("/admin/knowledge-ai")}
+              onClick={() => window.location.assign("/admin/knowledge-ai")}
               className="w-full rounded-xl border border-[#374151] px-5 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/5 hover:text-white sm:w-auto"
             >
               Cancel
@@ -245,6 +259,43 @@ export default function UploadInterview() {
             </button>
           </div>
         </form>
+      )}
+
+      {extractedData && extractedData.length > 0 && !uploadSuccess && (
+        <div className="mt-8 rounded-2xl border border-[#A855F7]/30 bg-[#121620] p-5 sm:p-8">
+          <h2 className="mb-4 text-xl font-bold text-white">Preview Extracted Interview</h2>
+          <p className="mb-6 text-sm text-gray-400">Silakan periksa hasil ekstraksi AI dari audio interview sebelum menyimpannya ke database.</p>
+
+          <div className="mb-6 grid gap-4 md:grid-cols-2">
+            {extractedData.map((item, idx) => (
+              <div key={idx} className="rounded-xl border border-[#30363D] bg-[#0B0E14] p-4">
+                <h3 className="mb-2 text-md font-semibold text-white">{item.title}</h3>
+                <div className="space-y-2 text-xs text-gray-300">
+                  <p><strong className="text-gray-500">Gejala:</strong> {item.symptoms}</p>
+                  <p><strong className="text-gray-500">Penyebab:</strong> {item.root_cause}</p>
+                  <p><strong className="text-gray-500">Solusi:</strong> {item.solution}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row justify-end">
+            <button
+              onClick={() => setExtractedData(null)}
+              disabled={isUploading}
+              className="w-full rounded-xl border border-[#374151] py-3 text-sm font-medium text-gray-300 transition hover:bg-white/5 disabled:opacity-50 sm:w-auto px-6"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSaveToDB}
+              disabled={isUploading}
+              className="w-full rounded-xl bg-[#7C3AED] py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9] disabled:opacity-50 px-6"
+            >
+              {isUploading ? "Menyimpan ke Database..." : "Confirm & Save to Knowledge Base"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

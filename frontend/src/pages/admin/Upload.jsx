@@ -165,7 +165,7 @@ export default function UploadData() {
       formData.append("file", selectedFile);
 
       const response = await fetch(
-        "black-pearl-aic-comp-fest-khpfq0lxl-maccreas-projects.vercel.app/api/upload",
+        "http://localhost:8000/api/upload",
         {
           method: "POST",
           body: formData,

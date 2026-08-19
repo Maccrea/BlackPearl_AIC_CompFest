@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from groq import Groq
 import os
 import json
@@ -67,6 +67,18 @@ class UserInput(BaseModel):
     role: str
     status: str
 
+class CaseItem(BaseModel):
+    title: str
+    category: str
+    symptoms: str
+    root_cause: str
+    solution: str
+    confidence: int
+    status: str
+
+class SaveKnowledgeInput(BaseModel):
+    cases: list[CaseItem]
+
 def get_knowledge_base():
     try:
         response = supabase.table("knowledge_cases").select("*").execute()
@@ -79,7 +91,6 @@ def get_knowledge_base():
         tfidf_matrix = vectorizer.fit_transform(case_symptoms)
         return cases, vectorizer, tfidf_matrix
     except Exception as e:
-        print(f"Error fetching from Supabase: {e}")
         return [], None, None
 
 @app.post("/analyze")
@@ -122,7 +133,7 @@ def analyze_symptoms(data: SymptomInput):
         try:
             chat_completion = client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 temperature=0.2,
                 response_format={"type": "json_object"}
             )
@@ -187,7 +198,6 @@ def get_knowledge_list():
             
         return formatted_data
     except Exception as e:
-        print(f"Error fetching knowledge list: {e}")
         return []
 
 @app.get("/api/knowledge/{knowledge_id}")
@@ -256,7 +266,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         """
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             temperature=0.2,
             response_format={"type": "json_object"}
         )
@@ -265,13 +275,25 @@ async def upload_dataset(file: UploadFile = File(...)):
         cases_to_insert = extracted_data.get("cases", [])
         
         if cases_to_insert:
-            supabase.table("knowledge_cases").insert(cases_to_insert).execute()
-            return {"filename": file.filename, "message": f"{len(cases_to_insert)} kasus berhasil diekstrak AI dan disimpan!"}
+            return {
+                "filename": file.filename, 
+                "message": f"{len(cases_to_insert)} kasus berhasil diekstrak AI. Menunggu konfirmasi Anda.",
+                "extracted_cases": cases_to_insert
+            }
         else:
             return {"error": "AI gagal mengekstrak data menjadi kasus."}
             
     except Exception as e:
         return {"error": f"Gagal memproses file: {str(e)}"}
+
+@app.post("/api/save-knowledge")
+def save_extracted_knowledge(data: SaveKnowledgeInput):
+    try:
+        cases_dict = [case.dict() for case in data.cases]
+        supabase.table("knowledge_cases").insert(cases_dict).execute()
+        return {"message": f"{len(cases_dict)} kasus berhasil dikonfirmasi dan disimpan ke Knowledge Base!"}
+    except Exception as e:
+        return {"error": f"Gagal menyimpan ke database: {str(e)}"}
 
 @app.post("/api/knowledge/upload-interview")
 async def upload_interview(title: str = Form(...), file: UploadFile = File(...)):
@@ -319,7 +341,7 @@ async def upload_interview(title: str = Form(...), file: UploadFile = File(...))
         """
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             temperature=0.1,
             response_format={"type": "json_object"}
         )
@@ -328,11 +350,11 @@ async def upload_interview(title: str = Form(...), file: UploadFile = File(...))
         cases_to_insert = extracted_data.get("cases", [])
         
         if cases_to_insert:
-            supabase.table("knowledge_cases").insert(cases_to_insert).execute()
             return {
                 "filename": file.filename,
                 "title": title,
-                "message": f"{len(cases_to_insert)} masalah terdeteksi dari interview dan berhasil masuk Knowledge Base!"
+                "message": f"{len(cases_to_insert)} masalah terdeteksi dari interview. Menunggu konfirmasi Anda.",
+                "extracted_cases": cases_to_insert
             }
         else:
             return {"error": "AI gagal mengekstrak kasus dari interview."}

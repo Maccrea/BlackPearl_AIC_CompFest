@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Hexagon,
+  BrainCircuit,
   Mail,
   Lock,
   Eye,
@@ -61,10 +61,9 @@ export default function LoginRole() {
         <div className="mb-8 flex flex-col items-center">
 
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#7C3AED]/10">
-            <Hexagon
+            <BrainCircuit
               size={40}
-              fill="#7C3AED"
-              stroke="#A78BFA"
+              className="text-[#A855F7]"
               strokeWidth={1.5}
             />
           </div>
